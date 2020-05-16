@@ -10,6 +10,39 @@ Just in Time Grading Messages (JGRAM) is a program conceived of by Professor Bra
 ## Operation
 
 ## File List
+jgram
+├── README.txt
+├── pom.xml
+├── saved_jgrams.txt
+└── src
+    ├── jgram
+    │   ├── MainJGRAM.java
+    │   ├── assessment
+    │   │   ├── Checkpoint.java
+    │   │   ├── Comment.java
+    │   │   ├── Document.java
+    │   │   ├── Evaluator.java
+    │   │   ├── GradeMapping.java
+    │   │   ├── JustInTimeEvaluator.java
+    │   │   └── Result.java
+    │   ├── security
+    │   │   └── JWT.java
+    │   ├── task
+    │   │   ├── EvaluationTask.java
+    │   │   ├── NewDocumentTask.java
+    │   │   ├── TamperTestTask.java
+    │   │   └── Task.java
+    │   ├── tests
+    │   │   ├── CheckpointTest.java
+    │   │   ├── CommentTest.java
+    │   │   ├── DocumentTest.java
+    │   │   ├── GradeMappingTest.java
+    │   │   ├── JWTTest.java
+    │   │   ├── JustInTimeEvaluatorTest.java
+    │   │   └── ResultTest.java
+    │   └── utilities
+    │       └── Validation.java
+    └── module-info.java
 
 ## Test
 JUnit tests are located jgram/src/jgram/tests 
