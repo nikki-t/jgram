@@ -10,7 +10,7 @@ Just in Time Grading Messages (JGRAM) is a program conceived of by Professor Bra
 ## Operation
 
 ## File List
-'''
+```
 jgram
 ├── README.txt
 ├── pom.xml
@@ -44,7 +44,7 @@ jgram
     │   └── utilities
     │       └── Validation.java
     └── module-info.java
-'''
+```
 ## Test
 JUnit tests are located jgram/src/jgram/tests 
 
