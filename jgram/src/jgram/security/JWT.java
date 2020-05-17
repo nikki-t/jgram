@@ -69,7 +69,7 @@ public class JWT {
 		
 		Date date = new Date(System.currentTimeMillis());
 		
-		// Post1
+		// Post1 Sign JWT
 		byte[] secretKey = DatatypeConverter.parseBase64Binary(secret);
 		Key signingKey = new SecretKeySpec(secretKey, signatureAlgorithm.getJcaName());
 		
