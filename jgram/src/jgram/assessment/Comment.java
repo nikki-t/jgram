@@ -74,6 +74,8 @@ public class Comment {
 	 * Postcondition4 (Add grade): Add grade to GradeMapping.
 	 * Postcondition5 (Return GradeMapping): Return complete GradeMapping.
 	 * 
+	 * TODO provide grademapping validation
+	 * 
 	 * @return GradeMapping object
 	 */
 	public GradeMapping extractGradeMapping() {
@@ -121,6 +123,9 @@ public class Comment {
 	 * data (weight, grade, feedback).
 	 * Postcondition3 (Checkpoint creation): Create and return Checkpoint object
 	 * from extracted data.
+	 * 
+	 * TODO provide checkpoint validation
+	 * 
 	 * @return Checkpoint object
 	 */
 	public Checkpoint extractCheckpoint(GradeMapping gradeMapping) {
