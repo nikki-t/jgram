@@ -19,6 +19,7 @@ public class Checkpoint {
 	private String feedback;
 	
 	// Constructor(s) - Post1
+	// TODO Provide validation to checkpoint data
 	public Checkpoint(int inputWeight, int inputGrade, String inputFeedback) {
 		weight = inputWeight;
 		grade = inputGrade;

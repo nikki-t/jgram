@@ -55,30 +55,30 @@ public class EvaluationTask extends Task {
 	@Override
 	public void performTask() {
 		
-		// Post1
+		// Post1 Document
 		Document document = new Document(getDocument());
 		document.setAssignmentName("assignment_sample.docx");
 		
-		// Post2
+		// Post2 Comments
 		document.parseComments();
 		
-		// Post3
+		// Post3 Grade mapping
 		document.parseGradeMapping();
 		
-		// Post4
+		// Post4 Checkpoints
 		document.parseCheckpoints();
 		
-		// Post5
+		// Post5 Evaluate assignment
 		document.calculateResult();
 		
-		// Post6
+		// Post6 Create hash string
 		document.createHashString("1", "BU-MET", "JRAM", secret);
 		
-		// Post7
+		// Post7 Display result
 		System.out.println("Grading Result Table: ");
 		System.out.println(document.createResultTable());
 		
-		// Post8
+		// Post8 Write result
 		document.writeResult();
 		
 	}

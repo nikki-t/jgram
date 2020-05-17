@@ -175,9 +175,10 @@ public class Document {
 	 */
 	public void calculateResult() {
 		
-		// Post1
+		// Post1 Calculate
 		JustInTimeEvaluator justInTimeEval = new JustInTimeEvaluator(checkpointList);
 		
+		// Post2 Hash result
 		result = justInTimeEval.evaluate();
 		
 		
