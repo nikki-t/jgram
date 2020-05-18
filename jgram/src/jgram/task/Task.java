@@ -18,8 +18,8 @@ public abstract class Task {
 	/**
 	 * Intent: To generate a list of the document's grade mapping and 
 	 * checkpoints.
-	 * Postcondition1: Return a list of the document's grade mapping and
-	 * checkpoints.
+	 * Postcondition1: A list of the document's grade mapping and checkpoints is
+	 * returned.
 	 * @return An array of Strings
 	 */
 	public String[][] getDocument() {
