@@ -137,7 +137,7 @@ public class MainJGRAM {
 		System.out.println("\n---------------------------------[ HELP ]--------------------------------------\n");
 		
 		// Post1 Display help (Polymorphism)
-		for (Task task: taskList) {
+		for (Task task : taskList) {
 			task.displayHelp();
 		}
 		
