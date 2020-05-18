@@ -14,6 +14,13 @@ In Eclispse:
 
 ## Operation
 
+To run JGRAM:
+* Execute MainJGRAM.java which serves as the main entry point to 
+the JGRAM program
+* Enter numbers 1 through 5 to indicate the choice in task
+you would like to run
+* The program runs until the user enters 5.
+
 ## File List
 ```
 jgram
