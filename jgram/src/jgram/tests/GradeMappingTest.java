@@ -9,7 +9,9 @@ import org.junit.jupiter.api.Test;
 
 class GradeMappingTest {
 	
-	
+	/**
+	 * Test the creation of GradeMapping objects.
+	 */
 	@Test
 	void testToString() {
 		
@@ -25,6 +27,10 @@ class GradeMappingTest {
 		
 	}
 	
+	/**
+	 * Test that two GradeMapping objects are equal if they have the same
+	 * grade letters mapped to the same grade numbers.
+	 */
 	@Test
 	void testEquals() {
 		
@@ -39,6 +45,10 @@ class GradeMappingTest {
 		assertTrue(gradeMapping1.equals(gradeMapping2));
 	}
 	
+	/**
+	 * Test that two GradeMapping objects are not equal if they do not have the 
+	 * same grade letters mapped to the same grade numbers.
+	 */
 	@Test
 	void testNotEquals() {
 		

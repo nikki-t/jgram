@@ -11,7 +11,11 @@ import jgram.assessment.JustInTimeEvaluator;
 import jgram.assessment.Result;
 
 class JustInTimeEvaluatorTest {
-
+	
+	/**
+	 * Test that the JustInTimeEvaluator evaluate method's total grade 
+	 * calculation.
+	 */
 	@Test
 	void Checkpointte() {
 		

@@ -10,6 +10,10 @@ import org.junit.jupiter.api.Test;
 
 class CommentTest {
 	
+	/**
+	 * Test if two Comment objects are equal if they have the same id, author,
+	 * and text.
+	 */
 	@Test
 	void testEquals() {
 		
@@ -20,7 +24,10 @@ class CommentTest {
 		
 		assertTrue(c1.equals(c2));
 	}
-
+	
+	/**
+	 * Test the creation of Comment objects.
+	 */
 	@Test
 	void testToString() {
 		
@@ -34,7 +41,11 @@ class CommentTest {
 		assertEquals(commentString, comment.toString());
 		
 	}
-
+	
+	/**
+	 * Test that a Grade Mapping object is created when correctly extracted
+	 * from a Comment object.
+	 */
 	@Test
 	void testExtractGradeMapping() {
 		
@@ -49,7 +60,11 @@ class CommentTest {
 		assertEquals(gradeMapping2, gradeMapping1);
 		
 	}
-
+	
+	/**
+	 * Test that a Checkpoint object is created when correctly extracted
+	 * from a Comment object.
+	 */
 	@Test
 	void testExtractCheckpoint() {
 		

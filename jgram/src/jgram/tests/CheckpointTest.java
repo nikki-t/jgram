@@ -7,7 +7,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 class CheckpointTest {
-
+	
+	/**
+	 * Test the creation of Checkpoint objects.
+	 */
 	@Test
 	void testToString() {
 		
@@ -17,7 +20,11 @@ class CheckpointTest {
 				checkpoint.toString());
 		
 	}
-
+	
+	/**
+	 * Test that two Checkpoint objects are equal if they have the same
+	 * weight, grade, and feedback.
+	 */
 	@Test
 	void testEquals() {
 		
@@ -28,6 +35,10 @@ class CheckpointTest {
 		
 	}
 	
+	/**
+	 * Test that two Checkpoint objects are not equal if they do not have the 
+	 * same weight, grade, and feedback.
+	 */
 	@Test
 	void testNotEquals() {
 		

@@ -10,7 +10,11 @@ import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 
 class ResultTest {
-
+	
+	/**
+	 * Test that two Result objects are equal when they have the same 
+	 * Checkpoints (Checkpoint map) and total grade.
+	 */
 	@Test
 	void testEqualsObject() {
 		
