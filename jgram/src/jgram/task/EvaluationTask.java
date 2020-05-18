@@ -42,15 +42,17 @@ public class EvaluationTask extends Task {
 	 * Intent: Evaluate, calculate and display assignment grade.
 	 * Postcondition1 (Document) Create a new Document object that needs to be
 	 * graded.
-	 * Postcondition2 (Comments): Extract comments from document.
-	 * Postcondition3 (Grade mapping): Extract grade mapping from document.
-	 * Postcondition4 (Checkpoints): Extract checkpoints from document.
-	 * Postcondition5 (Evaluate assignment): Evaluate and calculate total grade.
+	 * Postcondition2 (Comments): Comments are extracted from document.
+	 * Postcondition3 (Grade mapping): Grade mapping is extracted from document.
+	 * Postcondition4 (Checkpoints): Checkpoints are extracted from document.
+	 * Postcondition5 (Evaluate assignment): Document is evaluated and total
+	 * grade is calculated.
 	 * Postcondition6 (Create hash string): An encoded hash string is created
 	 * from the result.
-	 * Postcondition7 (Display result): Display assignment grade to the console.
-	 * Postcondition8 (Write result): Write result to a file for later retrieval
-	 * in tamper test.
+	 * Postcondition7 (Display result): Assignment grade is displayed to the 
+	 * console.
+	 * Postcondition8 (Write result): The result hash string is written to a 
+	 * file for later retrieval in tamper test.
 	 */
 	@Override
 	public void performTask() {

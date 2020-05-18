@@ -71,7 +71,8 @@ public class JWT {
 		
 		// Post1 Sign JWT
 		byte[] secretKey = DatatypeConverter.parseBase64Binary(secret);
-		Key signingKey = new SecretKeySpec(secretKey, signatureAlgorithm.getJcaName());
+		Key signingKey = new SecretKeySpec(secretKey, 
+				signatureAlgorithm.getJcaName());
 		
 		// Post2 Build JWT using registered claim names
 		JwtBuilder builder = Jwts.builder().setId(id)
@@ -191,7 +192,8 @@ public class JWT {
 		}
 		
 		// Post2 Total grade
-		float totalGrade = Float.parseFloat(claims.get(CLAIM_TOTAL_GRADE).toString());
+		float totalGrade = Float.parseFloat(claims.get(CLAIM_TOTAL_GRADE)
+			.toString());
 		result.setTotalGrade(totalGrade);
 		
 		return result;

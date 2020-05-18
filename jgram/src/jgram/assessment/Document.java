@@ -249,8 +249,8 @@ public class Document {
 	 * 
 	 * Postcondition1 (Create PrintWriter): PrintWriter object is created and
 	 * allows writing to a text filed name 'saved_jgrams.txt'.
-	 * Postcondition2 (Hash string written): The name of the assignment and Document hashString
-	 * are written to the file.
+	 * Postcondition2 (Hash string written): The name of the assignment and 
+	 * Document hashString are written to the file.
 	 */
 	public void writeResult() {
 		

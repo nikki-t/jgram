@@ -14,26 +14,32 @@ public class MainJGRAM {
 	 * grading tasks. Once the user selects a task, the task is run and the 
 	 * result of the task is displayed to the console.
 	 * 
-	 * Postcondition1 (Task List): Create a list of tasks
-	 * Postcondition2 (Prompt): Prompt the user for task selection.
-	 * Postcondition3 (Task Execution): Execute the task the user selected.
+	 * Postcondition1 (Task list): A list of tasks is created.
+	 * Postcondition2 (Prompt): The user us prompted to select a task.
+	 * Postcondition3 (Task execution): The task the user selected has been executed.
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		
-		// Post1
+		// Post1 Task list
 		Task evalTask = new EvaluationTask();
 		Task tamperTask = new TamperTestTask();
 		Task newDocTask = new NewDocumentTask();
 		Task[] taskList = {evalTask, tamperTask, newDocTask};
 		
+		// Set secret prompt and reminder
+		String getSecret = "\nEnter secret (Example: mysecret):";
+		String secretReminder = "\tMake sure to save this secret somewhere safe "
+				+ "\n\tas it is needed for the tamper test.\n";
+		
+		// Print welcome message
 		System.out.println("Welcome to JGRAM.");
 		
 		// Loop until the user indicates they wish to exit
 		boolean keepGoing = true;
 		while (keepGoing) {
 		
-			// Post2
+			// Post2 Prompt
 			System.out.println("\n---------------------------------[ INPUT ]-------------------------------------\n");
 			String task = prompt("Select Task : " 
 					+ "\n\t 1 : New Document Test " 
@@ -43,7 +49,7 @@ public class MainJGRAM {
 					+ "\n\t 5 : Exit"
 					+ "\n\t\t (Example: 1): ");
 			
-			// Post3 (Downcasting)
+			// Post3 Task execution (Downcasting)
 			String secret = "";
 			switch (task) {
 				
@@ -55,10 +61,8 @@ public class MainJGRAM {
 				// Evaluation
 				case "2":
 					// Set secret for evaluation task
-					secret = prompt("\nEnter secret (Example: mysecret):");
-					System.out.println("\tMake sure to save this secret "
-							+ "somewhere safe \n\tas it is needed for the tamper "
-							+ "test.\n");
+					secret = prompt(getSecret);
+					System.out.println(secretReminder);
 					if (evalTask instanceof EvaluationTask) {
 						((EvaluationTask) evalTask).setSecret(secret);
 						evalTask.performTask();
@@ -70,10 +74,8 @@ public class MainJGRAM {
 				// Tamper
 				case "3":
 					// Set secret for tamper task
-					secret = prompt("\nEnter secret (Example: mysecret):");
-					System.out.println("\tMake sure to save this secret "
-							+ "somewhere safe \n\tas it is needed for the tamper "
-							+ "test.\n");
+					secret = prompt(getSecret);
+					System.out.println(secretReminder);
 					if (tamperTask instanceof TamperTestTask) {
 						((TamperTestTask) tamperTask).setSecret(secret);
 						tamperTask.performTask();
@@ -125,7 +127,8 @@ public class MainJGRAM {
 	/**
 	 * Intent: Display descriptions of each task on the console.
 	 * 
-	 * Postcondition1 (Display help): Display each tasks help description.
+	 * Postcondition1 (Display help): Each task's help description is displayed 
+	 * on the console.
 	 * 
 	 * @param taskList : List of Task objects
 	 */
@@ -133,7 +136,7 @@ public class MainJGRAM {
 		
 		System.out.println("\n---------------------------------[ HELP ]--------------------------------------\n");
 		
-		// Post1 (Polymorphism)
+		// Post1 Display help (Polymorphism)
 		for (Task task: taskList) {
 			task.displayHelp();
 		}
