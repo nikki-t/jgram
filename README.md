@@ -1,7 +1,7 @@
 # JGRAM
 
 ## Project Overview
-Just in Time Grading Messages (JGRAM) is a program conceived of by Professor Braude at Boston University Metropolitan College to better connect strades. The goaludents with learning objectives and assignment g of the program is to provide assignment feedback through the use of checkpoints located in key points throughout the assignment. Along with the inclusion of feedback, each checkpoint has a weight and grade. JGRAM produces a results table that collocates all checkpoints in one place which provides an overview of the student’s grade. The checkpoints help students to understand how they met expectations of the assignment and where to focus their future work in the course.
+Just in Time Grading Messages (JGRAM) is a program conceived of by Professor Braude at Boston University Metropolitan College to better connect strades. The goal of the program is to provide assignment feedback through the use of checkpoints located in key points throughout the assignment. Along with the inclusion of feedback, each checkpoint has a weight and grade. JGRAM produces a results table that collocates all checkpoints in one place which provides an overview of the student’s grade. The checkpoints help students to understand how they met expectations of the assignment and where to focus their future work in the course.
 
 ## Installation
 In Eclispse:
@@ -23,39 +23,58 @@ you would like to run
 
 ## File List
 ```
-jgram
-├── README.txt
-├── pom.xml
-├── saved_jgrams.txt
-└── src
-    ├── jgram
-    │   ├── MainJGRAM.java
-    │   ├── assessment
-    │   │   ├── Checkpoint.java
-    │   │   ├── Comment.java
-    │   │   ├── Document.java
-    │   │   ├── Evaluator.java
-    │   │   ├── GradeMapping.java
-    │   │   ├── JustInTimeEvaluator.java
-    │   │   └── Result.java
-    │   ├── security
-    │   │   └── JWT.java
-    │   ├── task
-    │   │   ├── EvaluationTask.java
-    │   │   ├── NewDocumentTask.java
-    │   │   ├── TamperTestTask.java
-    │   │   └── Task.java
-    │   ├── tests
-    │   │   ├── CheckpointTest.java
-    │   │   ├── CommentTest.java
-    │   │   ├── DocumentTest.java
-    │   │   ├── GradeMappingTest.java
-    │   │   ├── JWTTest.java
-    │   │   ├── JustInTimeEvaluatorTest.java
-    │   │   └── ResultTest.java
-    │   └── utilities
-    │       └── Validation.java
-    └── module-info.java
+.
+├── README.md
+└── jgram
+    ├── README-A2.txt
+    ├── pom.xml
+    └── src
+        └── jgram
+            ├── MainJGRAM.java
+            ├── assessment
+            │   ├── Checkpoint.java
+            │   ├── Comment.java
+            │   ├── Document.java
+            │   ├── Evaluator.java
+            │   ├── GradeMapping.java
+            │   ├── JustInTimeEvaluator.java
+            │   └── Result.java
+            ├── exceptions
+            │   ├── InvalidCheckpointException.java
+            │   ├── InvalidCommentException.java
+            │   ├── InvalidGradeMappingException.java
+            │   └── InvalidTableException.java
+            ├── security
+            │   ├── JWT.java
+            │   └── Secret.java
+            ├── task
+            │   ├── EvaluationTask.java
+            │   ├── NewDocumentTask.java
+            │   ├── TamperTestTask.java
+            │   └── Task.java
+            ├── tests
+            │   ├── CheckpointTest.java
+            │   ├── CommentTest.java
+            │   ├── DocumentTest.java
+            │   ├── EvaluationTaskTest.java
+            │   ├── GradeMappingTest.java
+            │   ├── JWTTest.java
+            │   ├── JustInTimeEvaluatorTest.java
+            │   ├── ResultTest.java
+            │   ├── TamperTaskTest.java
+            │   ├── TestUtilities.java
+            │   └── resources
+            │       ├── GRADED
+            │       │   ├── GRADED_document-test.docx
+            │       │   ├── GRADED_eval-task-test.docx
+            │       │   ├── GRADED_tamper-task-test.docx
+            │       │   └── report.txt
+            │       ├── document-test.docx
+            │       ├── eval-task-test.docx
+            │       ├── report.txt
+            │       └── tamper-task-test.docx
+            └── utilities
+                └── Validation.java
 ```
 ## Test
 JUnit tests are located jgram/src/jgram/tests 
