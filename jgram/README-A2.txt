@@ -1,3 +1,7 @@
+MAIN ENTRY POINT:
+MainJGRAM.main
+
+DESCRIPTION:
 This iteration of JGRAM is focused on providing exception handling for
 input and Word document validation and file I/O operations.
 
@@ -11,11 +15,13 @@ are graded and copies of graded assignments are outputted to a 'GRADED' sub-
 directory and prepended with the title 'GRADED'. A tamper detection reported
 is also outputted for all assignments tested for modifications.
 
-Requirements can be found here: https://drive.google.com/file/d/15SmNF89OAkJHjiEUW1iYfEQ1LgKaQtQR/view?usp=sharing
+REQUIREMENTS:
+Can be found here: https://drive.google.com/file/d/15SmNF89OAkJHjiEUW1iYfEQ1LgKaQtQR/view?usp=sharing
 
-The class model can be found here: https://drive.google.com/file/d/15SmNF89OAkJHjiEUW1iYfEQ1LgKaQtQR/view?usp=sharing
+CLASS MODEL:
+Can be found here: https://drive.google.com/file/d/15SmNF89OAkJHjiEUW1iYfEQ1LgKaQtQR/view?usp=sharing
 
-Third-party APIs include: 
+THIRD-PARTY APIs: 
 io.jsonwebtokens
 javax.xml.bind
 javax.xml.crypto
