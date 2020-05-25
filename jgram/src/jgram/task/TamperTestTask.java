@@ -256,13 +256,13 @@ public class TamperTestTask extends Task {
 			
 		} catch (IOException e) {
 			// Directory stream, File input stream, Files copy, getHashStringFromFile
-			String error = "ERROR: Could not process files in directory "
+			String error = "\nERROR: Could not process files in directory "
 					+ "entered.";
 			System.out.println(error);
 		
 		} catch (SignatureException | IllegalArgumentException e) {
 			// JWT
-			System.out.println("ERROR: INVALID secret entered.");
+			System.out.println("\nERROR: INVALID secret entered.");
 			
 		} finally {
 			if (outStream != null) {

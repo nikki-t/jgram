@@ -54,14 +54,14 @@ public abstract class Task {
 		Scanner keyboard = new Scanner(System.in);
 		Path path = getDirectory(keyboard);
 		
-		// Test what directory path to obtain
-		if (taskType.equals("tamper")) {
-			// Get 'GRADED' directory
-			path = Paths.get(path.toString(), "GRADED");
-		}
-		
 		// Valid path has been entered
 		if (path != null) {
+			
+			// Test what directory path to obtain
+			if (taskType.equals("tamper")) {
+				// Get 'GRADED' directory
+				path = Paths.get(path.toString(), "GRADED");
+			}
 			
 			// Post2 Directory contents
 			DirectoryStream<Path> directoryStream = 
