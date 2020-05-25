@@ -1,5 +1,15 @@
 package jgram.task;
 
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+import jgram.security.Secret;
+
 /**
  * Intent: The Task class represents one of many tasks the JGRAM program can 
  * complete.
@@ -9,41 +19,144 @@ package jgram.task;
  *
  */
 public abstract class Task {
+	
+	// Instance variable(s)
+	private Secret secret;
+	private ArrayList<Path> fileList;
 
 	// Constructor(s)
 	public Task() {}
 	
-	// Instance method(s)
+	public Task(String userSecret) {
+		secret = new Secret(userSecret);
+		fileList = new ArrayList<>();
+	}
 	
 	/**
-	 * Intent: To generate a list of the document's grade mapping and 
-	 * checkpoints.
-	 * Postcondition1: A list of the document's grade mapping and checkpoints is
-	 * returned.
-	 * @return An array of Strings
+	 * Intent: To retrieve all directories found at path provided as user
+	 * input.
+	 * 
+	 * Precondition1 (Selected task): User has selected a task that requires
+	 * a list of files to execute on.
+	 * 
+	 * Postcondition1 (Obtain directory path): A directory path is obtained 
+	 * from the user or a null value is returned if the user wishes to exit.
+	 * Postcondition2 (Directory contents): A list of the valid
+	 * directory contents is created.
+	 * Postcondition3 (Parsed list): The directory contents list is parsed 
+	 * for valid Word documents and stored in filesList.
+	 * 
+	 * @throws IOException
 	 */
-	public String[][] getDocument() {
+	public void createFileList(String taskType) throws IOException {
 		
-		// Simulation of Document content comments
-		String[] comment1 = {"0", "Nikki Tebaldi", "CHECKPOINT(WEIGHT=3, "
-				+ "GRADE=85, FEEDBACK=[Throws ArrayIndexOutOfBoundsException; "
-				+ "watch out for the Boolean condition that controls the for "
-				+ "loop’s execution. This for loop executes one more time than "
-				+ "you would want it to because of the greater than or equal to "
-				+ "sign.])"};
-		String[] comment2 = {"1", "Nikki Tebaldi", "CHECKPOINT(WEIGHT=3, "
-				+ "GRADE=100, FEEDBACK=[Excellent work.])"};
-		String[] comment3 = {"2", "Nikki Tebaldi", "CHECKPOINT(WEIGHT=4, "
-				+ "GRADE=90, FEEDBACK=[Per the prompt, the method should "
-				+ "return the first element in the array; use the break "
-				+ "keyword to exit the for loop once the element is found.])"};
-		String[] comment4 = {"3", "Nikki Tebaldi", "GRADEMAPPING(A+=97, "
-				+ "A=95, A-=93, B+=87, B=85, B-=83, C=77, F=67)"};
+		// Post1 Obtain directory path
+		Scanner keyboard = new Scanner(System.in);
+		Path path = getDirectory(keyboard);
 		
-		// String representing Document content
-		String[][] document = {comment1, comment2, comment3, comment4};
+		// Test what directory path to obtain
+		if (taskType.equals("tamper")) {
+			// Get 'GRADED' directory
+			path = Paths.get(path.toString(), "GRADED");
+		}
 		
-		return document;
+		// Valid path has been entered
+		if (path != null) {
+			
+			// Post2 Directory contents
+			DirectoryStream<Path> directoryStream = 
+					Files.newDirectoryStream(path);
+			
+			// Post3 parsed list
+			for (Path p : directoryStream) {
+				
+				// Extract name
+				int nameCount = p.getNameCount();
+				Path name = p.getName(nameCount - 1);
+				
+				// Word document
+				if (name.toString().endsWith(".docx")) {
+					
+					// Ignore Word temp files
+					if (!(name.toString().startsWith("~"))) {
+						getFileList().add(p);
+					}
+					
+				}
+			} // End for
+			
+			// Close resource
+			directoryStream.close();
+		
+		} // End outer if
+		
+	}
+	
+	/**
+	 * Intent: A brief description of each task will be displayed to the console.
+	 * Precondition1 (Help selection): The user indicated that they would like help.
+	 */
+	abstract public void displayHelp();
+	
+	/**
+	 * Obtain a Path from the user that represents a directory path on their
+	 * file system.
+	 * 
+	 * Postcondition1 (User input collected): The user has entered a directory
+	 * path and it has been validated.
+	 * Postcondtion2 (Handle invalid input): The user has entered an invalid 
+	 * directory path and has been notified on the console. The user is given 
+	 * the choice to enter another directory path or exit.
+	 * 
+	 * @param keyboard
+	 * @return Path object or null if user decides to exit.
+	 */
+	public Path getDirectory(Scanner keyboard) {
+		
+		// Path object to return
+		Path path = null;
+		
+		// Loop until the user enters a directory path or chooses to exit
+		boolean notADirectory = true;
+		boolean keepGoing = true;
+		while (notADirectory && keepGoing) {
+								
+			System.out.println("\nPlease enter a directory that contains Word "
+					+ "documents:");
+			String input = keyboard.nextLine();
+			
+			// Convert input into a path
+			path = Paths.get(input);
+			
+			if (Files.isDirectory(path)) {
+				notADirectory = false;
+			
+			// Post2 Handle invalid input	
+			} else if (input.equals("0")) {
+				path = null;
+				keepGoing = false;
+				
+			} else {
+				
+				String message = "\nYou entered an invalid directory. "
+						+ "\n\tPlease enter '0' to exit to the main menu "
+						+ "\n\tOR enter a new directory path: ";
+				System.out.println(message);
+			}
+			
+		}
+		
+		// Post1 User input collected
+		return path;
+		
+	}
+	
+	public ArrayList<Path> getFileList() {
+		return fileList;
+	}
+	
+	public Secret getSecret() {
+		return secret;
 	}
 	
 	/**
@@ -54,10 +167,12 @@ public abstract class Task {
 	 */
 	abstract public void performTask();
 	
-	/**
-	 * Intent: A brief description of each task will be displayed to the console.
-	 * Precondition1 (Help selection): The user indicated that they would like help.
-	 */
-	abstract public void displayHelp();
+	public void setFileList(ArrayList<Path> paths) {
+		fileList = paths;
+	}
+	
+	public void setSecret(Secret uSecret) {
+		secret = uSecret;
+	}
 	
 }

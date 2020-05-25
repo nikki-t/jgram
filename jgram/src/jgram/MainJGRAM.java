@@ -9,28 +9,36 @@ import jgram.task.Task;
 
 public class MainJGRAM {
 	
+	// Class constant(s)
+	private static final String TASK_SELECTION = "Select Task : " 
+			+ "\n\t 1 : New Document Test " 
+			+ "\n\t 2 : Generate Grade"
+			+ "\n\t 3 : Tamper Test" 
+			+ "\n\t 4 : Help"
+			+ "\n\t 5 : Exit"
+			+ "\n\t\t (Example: 1): ";
+	
+	private static final String GET_SECRET = "\nEnter secret (Example: "
+			+ "mysecret):";
+	private static final String SECRET_REMINDER = "\tMake sure to save this "
+			+ "secret somewhere safe "
+			+ "\n\tas it is needed for the tamper test.";
+	
 	/**
 	 * Intent: Provide the user with the option to run various evaluation and 
 	 * grading tasks. Once the user selects a task, the task is run and the 
 	 * result of the task is displayed to the console.
 	 * 
-	 * Postcondition1 (Task list): A list of tasks is created.
-	 * Postcondition2 (Prompt): The user us prompted to select a task.
-	 * Postcondition3 (Task execution): The task the user selected has been executed.
+	 * Postcondition1 (Task and secret prompt): The user is prompted to select a
+	 * task and is then prompted to enter a secret.
+	 * Postcondition2 (Task execution): The task the user selected has been 
+	 * executed.
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		
-		// Post1 Task list
-		Task evalTask = new EvaluationTask();
-		Task tamperTask = new TamperTestTask();
-		Task newDocTask = new NewDocumentTask();
-		Task[] taskList = {evalTask, tamperTask, newDocTask};
-		
-		// Set secret prompt and reminder
-		String getSecret = "\nEnter secret (Example: mysecret):";
-		String secretReminder = "\tMake sure to save this secret somewhere safe "
-				+ "\n\tas it is needed for the tamper test.\n";
+		// Set up Scanner object
+		Scanner keyboard = new Scanner(System.in);
 		
 		// Print welcome message
 		System.out.println("Welcome to JGRAM.");
@@ -39,54 +47,39 @@ public class MainJGRAM {
 		boolean keepGoing = true;
 		while (keepGoing) {
 		
-			// Post2 Prompt
-			System.out.println("\n---------------------------------[ INPUT ]-------------------------------------\n");
-			String task = prompt("Select Task : " 
-					+ "\n\t 1 : New Document Test " 
-					+ "\n\t 2 : Generate Grade"
-					+ "\n\t 3 : Tamper Test" 
-					+ "\n\t 4 : Help"
-					+ "\n\t 5 : Exit"
-					+ "\n\t\t (Example: 1): ");
+			// Post1 Task and secret prompt
+			System.out.println("\n---------------------------------[ INPUT ]--"
+					+ "-----------------------------------\n");
+			String task = prompt(TASK_SELECTION, keyboard);
 			
-			// Post3 Task execution (Downcasting)
-			String secret = "";
+			// Post3 Task execution
 			switch (task) {
 				
 				// New Document
 				case "1":
+					Task newDocTask = new NewDocumentTask();
 					newDocTask.performTask();
 					break;
 				
 				// Evaluation
 				case "2":
-					// Set secret for evaluation task
-					secret = prompt(getSecret);
-					System.out.println(secretReminder);
-					if (evalTask instanceof EvaluationTask) {
-						((EvaluationTask) evalTask).setSecret(secret);
-						evalTask.performTask();
-					} else {
-						System.out.println("Invalid evaluation task.");
-					}
+					String evalSecret = prompt(GET_SECRET, keyboard);
+					System.out.println(SECRET_REMINDER);
+					Task evalTask = new EvaluationTask(evalSecret);
+					evalTask.performTask();
 					break;
 				
 				// Tamper
 				case "3":
-					// Set secret for tamper task
-					secret = prompt(getSecret);
-					System.out.println(secretReminder);
-					if (tamperTask instanceof TamperTestTask) {
-						((TamperTestTask) tamperTask).setSecret(secret);
-						tamperTask.performTask();
-					} else {
-						System.out.println("Invalid tamper test task.");
-					}
+					String tamperSecret = prompt(GET_SECRET, keyboard);
+					System.out.println(SECRET_REMINDER);
+					Task tamperTask = new TamperTestTask(tamperSecret);
+					tamperTask.performTask();
 					break;
 				
 				// Help
 				case "4":
-					help(taskList);
+					help();
 					break;
 				
 				// Exit
@@ -103,26 +96,27 @@ public class MainJGRAM {
 					
 			
 		} // End while
+		
+		keyboard.close();
 		System.out.println("Goodbye...");
-	} 
-	
+	}
 	
 	/**
-	 * Intent: Display a message to the user and return user's answer.
-	 * @param message
-	 * @return String of stored user input.
+	 * Intent: Create and return a list of tasks.
+	 *
+	 * @return An array of Task objects
 	 */
-	private static String prompt(String message) {
+	private static Task[] createTaskList() {
 		
-		Scanner keyboard = new Scanner(System.in);
-		
-		System.out.println(message);
-		
-		String userInput = keyboard.next();
-		
-		return userInput;		
-		
-	}
+	    Task evalTask = new EvaluationTask();
+	    Task tamperTask = new TamperTestTask();
+	    Task newDocTask = new NewDocumentTask();
+
+	    Task[] taskList = {evalTask, tamperTask, newDocTask};
+
+	    return taskList;
+	} 
+	
 	
 	/**
 	 * Intent: Display descriptions of each task on the console.
@@ -130,16 +124,34 @@ public class MainJGRAM {
 	 * Postcondition1 (Display help): Each task's help description is displayed 
 	 * on the console.
 	 * 
-	 * @param taskList : List of Task objects
 	 */
-	private static void help(Task[] taskList) {
+	private static void help() {
 		
-		System.out.println("\n---------------------------------[ HELP ]--------------------------------------\n");
+		Task[] taskList = createTaskList();
+		
+		System.out.println("\n---------------------------------[ HELP ]--------"
+				+ "------------------------------\n");
 		
 		// Post1 Display help (Polymorphism)
 		for (Task task : taskList) {
 			task.displayHelp();
 		}
+		
+	}
+	
+	/**
+	 * Intent: Display a message to the user and return user's answer.
+	 * @param message
+	 * @param keyboard Scanner object
+	 * @return String of stored user input.
+	 */
+	private static String prompt(String message, Scanner keyboard) {
+		
+		System.out.println(message);
+		
+		String userInput = keyboard.next();
+		
+		return userInput;		
 		
 	}
 	

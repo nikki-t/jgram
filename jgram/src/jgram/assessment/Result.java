@@ -28,36 +28,6 @@ public class Result {
 		checkpointMap = new HashMap<>();
 	}
 	
-	// Accessor(s)
-	
-	/**
-	 * Returns result's total grade.
-	 * @return float value of total grade
-	 */
-	public float getTotalGrade() {
-		return totalGrade;
-	}
-	
-	/**
-	 * Returns result's Checkpoint map.
-	 * @return HashMap of checkpoints and identifiers
-	 */
-	public HashMap<Integer,Checkpoint> getCheckpointMap() {
-		return checkpointMap;
-	}
-	
-	// Mutator(s)
-	
-	/**
-	 * Sets the total grade value to parameter value.
-	 * @param grade float value to set total grade to
-	 */
-	public void setTotalGrade(float grade) {
-		totalGrade = grade;
-	}
-	
-	// Instance method(s)
-	
 	/**
 	 * Adds a checkpoint with an ID number to the checkpoint map.
 	 * @param checkpoint Checkpoint object
@@ -65,51 +35,6 @@ public class Result {
 	public void addCheckpoint(Checkpoint checkpoint) {
 		checkpointMap.put(checkpointID, checkpoint);
 		checkpointID++;
-	}
-	
-	/**
-	 * Compares Result objects.
-	 * @return boolean value that indicates if objects are equal
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		
-		// Test if object is compared with a reference to itself
-		if (obj == this) {
-			return true;
-		}
-		
-		// Check if object is an instance of Result
-		if (!(obj instanceof Result)) {
-			return false;
-		}
-		
-		// Downcast object to Result to compare instance variables
-		Result result = (Result) obj;
-		
-		// Total Grade
-		if(Float.compare(this.totalGrade, result.totalGrade) != 0) {
-			return false;
-		}
-		
-		// CheckpointMap size
-		if(this.checkpointMap.size() != result.checkpointMap.size()) {
-			return false;
-		}
-		
-		// Compare checkpointMap's keys (Checkpoint id)
-		if (!compareKeys(result)) {
-			return false;
-		}
-		
-		// Compare checkpointMap's values (Checkpoints)
-		if (!compareValues(result)) {
-			return false;
-		}
-		
-		// Result objects are equal
-		return true;
-		
 	}
 	
 	/**
@@ -160,6 +85,77 @@ public class Result {
 		}
 		
 		return isEqual;
+	}
+	
+	// Instance method(s)
+	
+	/**
+	 * Compares Result objects.
+	 * @return boolean value that indicates if objects are equal
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		
+		// Test if object is compared with a reference to itself
+		if (obj == this) {
+			return true;
+		}
+		
+		// Check if object is an instance of Result
+		if (!(obj instanceof Result)) {
+			return false;
+		}
+		
+		// Downcast object to Result to compare instance variables
+		Result result = (Result) obj;
+		
+		// Total Grade
+		if(Float.compare(this.totalGrade, result.totalGrade) != 0) {
+			return false;
+		}
+		
+		// CheckpointMap size
+		if(this.checkpointMap.size() != result.checkpointMap.size()) {
+			return false;
+		}
+		
+		// Compare checkpointMap's keys (Checkpoint id)
+		if (!compareKeys(result)) {
+			return false;
+		}
+		
+		// Compare checkpointMap's values (Checkpoints)
+		if (!compareValues(result)) {
+			return false;
+		}
+		
+		// Result objects are equal
+		return true;
+		
+	}
+	
+	/**
+	 * Returns result's Checkpoint map.
+	 * @return HashMap of checkpoints and identifiers
+	 */
+	public HashMap<Integer,Checkpoint> getCheckpointMap() {
+		return checkpointMap;
+	}
+	
+	/**
+	 * Returns result's total grade.
+	 * @return float value of total grade
+	 */
+	public float getTotalGrade() {
+		return totalGrade;
+	}
+	
+	/**
+	 * Sets the total grade value to parameter value.
+	 * @param grade float value to set total grade to
+	 */
+	public void setTotalGrade(float grade) {
+		totalGrade = grade;
 	}
 
 }

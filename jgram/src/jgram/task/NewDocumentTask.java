@@ -1,23 +1,12 @@
 package jgram.task;
 
+import java.io.IOException;
+
 public class NewDocumentTask extends Task {
 	
 	// Constructor(s)
 	public NewDocumentTask() {
 		super();
-	}
-	
-	// Instance method(s)
-	
-	/**
-	 * Intent: Validate a new document to test if it is ready to be uploaded to
-	 * CMS or gready for grading.
-	 * 
-	 * TO DO: Implement for next iteration.
-	 */
-	@Override
-	public void performTask() {
-		System.out.println("New document task.");
 	}
 	
 	/**
@@ -36,6 +25,17 @@ public class NewDocumentTask extends Task {
 				+ "\n\tfor the evaluation task.\n";
 		
 		System.out.println(help);
+	}
+	
+	/**
+	 * Intent: Validate a new document to test if it is ready to be uploaded to
+	 * CMS or gready for grading.
+	 * 
+	 * TO DO: Implement for next iteration.
+	 */
+	@Override
+	public void performTask() {
+		System.out.println("New document task.");
 	}
 	
 }

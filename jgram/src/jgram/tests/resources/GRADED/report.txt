@@ -1,0 +1,26 @@
+
+---------------------------------[ TAMPER REPORT ]-----------------------------
+
+Filename: tamper-task-test.docx
+
+Tamper Status: 
+	PASSED all comparisons
+
+Grade Mapping: 
+A+ = 97
+A  = 95
+A- = 93
+B+ = 87
+B  = 85
+B- = 83
+C  = 77
+F  = 67
+
+
+Result Table: 
+  C#   Weight   Grade   Feedback
+   1        7      90   
+   2        5      97   great clarity
+   3        7      95   Use generics, but overall good work
+            Σ   93.68   eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIxIiwiaWF0IjoxNTkwNDIyNzE1LCJzdWIiOiJKR1JBTSIsImlzcyI6IkJVLU1FVCIsIjEtV2VpZ2h0Ijo3LCIxLUdyYWRlIjo5MCwiMS1GZWVkYmFjayI6IiIsIjItV2VpZ2h0Ijo1LCIyLUdyYWRlIjo5NywiMi1GZWVkYmFjayI6ImdyZWF0IGNsYXJpdHkiLCIzLVdlaWdodCI6NywiMy1HcmFkZSI6OTUsIjMtRmVlZGJhY2siOiJVc2UgZ2VuZXJpY3MsIGJ1dCBvdmVyYWxsIGdvb2Qgd29yayIsIkdyYWRlTWFwcGluZyI6IkErID0gOTdcbkEgID0gOTVcbkEtID0gOTNcbkIrID0gODdcbkIgID0gODVcbkItID0gODNcbkMgID0gNzdcbkYgID0gNjdcbiIsIlRvdGFsQ1AiOjMsIlRvdGFsR3JhZGUiOjkzLjY4NDIxfQ.bX5xonr5ai9oIMnD5xTiw2Yj4TFhdRsU7ig1XrPSNV8
+

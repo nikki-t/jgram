@@ -1,6 +1,11 @@
 package jgram.task;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
 import jgram.assessment.Document;
+import jgram.exceptions.InvalidCommentException;
+import jgram.security.Secret;
 
 /**
  * Intent: Calculate and output the grade for an assignment.
@@ -19,70 +24,15 @@ import jgram.assessment.Document;
 public class EvaluationTask extends Task {
 	
 	// Instance variable(s)
-	String secret = "";
+	Document document;
 	
 	// Constructor(s)
 	public EvaluationTask() {
 		super();
 	}
 		
-	//Accessor(s)
-	public String getSecret() {
-		return secret;
-	}
-	
-	// Mutator(s)
-	public void setSecret(String userSecret) {
-		secret = userSecret;
-	}
-	
-	// Instance method(s)
-	
-	/**
-	 * Intent: Evaluate, calculate and display assignment grade.
-	 * Postcondition1 (Document) Create a new Document object that needs to be
-	 * graded.
-	 * Postcondition2 (Comments): Comments are extracted from document.
-	 * Postcondition3 (Grade mapping): Grade mapping is extracted from document.
-	 * Postcondition4 (Checkpoints): Checkpoints are extracted from document.
-	 * Postcondition5 (Evaluate assignment): Document is evaluated and total
-	 * grade is calculated.
-	 * Postcondition6 (Create hash string): An encoded hash string is created
-	 * from the result.
-	 * Postcondition7 (Display result): Assignment grade is displayed to the 
-	 * console.
-	 * Postcondition8 (Write result): The result hash string is written to a 
-	 * file for later retrieval in tamper test.
-	 */
-	@Override
-	public void performTask() {
-		
-		// Post1 Document
-		Document document = new Document(getDocument());
-		document.setAssignmentName("assignment_sample.docx");
-		
-		// Post2 Comments
-		document.parseComments();
-		
-		// Post3 Grade mapping
-		document.parseGradeMapping();
-		
-		// Post4 Checkpoints
-		document.parseCheckpoints();
-		
-		// Post5 Evaluate assignment
-		document.calculateResult();
-		
-		// Post6 Create hash string
-		document.createHashString("1", "BU-MET", "JRAM", secret);
-		
-		// Post7 Display result
-		System.out.println("Grading Result Table: ");
-		System.out.println(document.createResultTable());
-		
-		// Post8 Write result
-		document.writeResult();
-		
+	public EvaluationTask(String userSecret) {
+		super(userSecret);
 	}
 	
 	/**
@@ -105,6 +55,150 @@ public class EvaluationTask extends Task {
 		
 		System.out.println(help);	
 		
+	}
+	
+	/**
+	 * Intent: Display invalid comment or list of invalid comments determined
+	 * from exception thrown by Comment class.
+	 * 
+	 * Precondition1 (Invalid comments): The graded document contains invalid
+	 * comments which can include invalid checkpoints and grade mapping.
+	 * 
+	 * Postcondition1 (Invalid comments display): All invalid comments for
+	 * the assignment are displayed on the console.
+	 * @param e
+	 */
+	private void displayInvalidCommentException(InvalidCommentException e) {
+		
+		// Post1 Invalid comments display
+		String filename = document.getAssignmentName().getFileName().toString();
+		System.out.println(e.getMessage() + " " + filename);
+		
+		// Check if exception has a comment id
+		if (e.getCommentID() != -1) {
+			
+			System.out.println("Please check the following: ");
+			int id = e.getCommentID() + 1;
+			System.out.println("\tComment #" + id);
+		}
+		
+		// Check if exception has a list of invalid comments
+		if (e.getInvalidCommentList() != null) {
+			
+			System.out.println("Please check the following: ");
+			// Display invalid comment numbers
+			for (int id : e.getInvalidCommentList()) {
+				id += 1;
+				System.out.println("\tComment #" + id);
+			}
+		}
+	}
+	
+	/**
+	 * Intent: Parse document for comments, checkpoints, and a grade mapping.
+	 * 
+	 * Postcondition1 (Comments): Comments are extracted from document.
+	 * Postcondition2 (Grade mapping): Grade mapping is extracted from document.
+	 * Postcondition3 (Checkpoints): Checkpoints are extracted from document.
+	 * 
+	 * @param document Document object
+	 * @throws InvalidCommentException
+	 */
+	private void parseDocument(Document document) throws IOException, 
+			InvalidCommentException {
+		
+		// Post1 Comments
+		document.parseComments();
+		
+		// Post2 Grade mapping
+		document.parseGradeMapping();
+		
+		// Post3 Checkpoints
+		document.parseCheckpoints();
+		
+	}
+	
+	/**
+	 * Intent: Evaluate, calculate and display assignment grade.
+	 * 
+	 * Postcondition1 (Document loop): All documents in a directory have been
+	 * iterated on and the task operations have been executed if applicable.
+	 * Postcondition2 (Document): A new Document object is created that needs 
+	 * to be graded.
+	 * Postcondition3 (Parse document): Document is parsed for grading data.
+	 * Postcondition4 (Evaluate assignment): Document is evaluated and total
+	 * grade is calculated.
+	 * Postcondition5 (Create hash string): An encoded hash string is created
+	 * from the result.
+	 * Postcondition6 (Create graded assignment): A copy of the assignment is 
+	 * created and the results of the graded assignment are appended to the
+	 * end of the assignment copy.
+	 * Postcondition7 (Handle exceptions): Exceptions are reported to the 
+	 * console and control returns to caller.
+	 */
+	@Override
+	public void performTask() {
+		
+		// Notice on overwritten graded files
+		System.out.println("\nNOTE: Any previously graded assignments "
+		+ "will be overwritten.");
+		
+		try {
+		
+			// Post1 Document loop
+			createFileList("evaluation");
+			
+			// Return to main menu if file list was not found
+			if (getFileList().isEmpty()) {
+				System.out.println("\nNo Word documents were found.");
+				System.out.println("\n\tExiting to main menu...");
+				return;
+			}
+		
+			for (Path path : getFileList()) {
+				
+				try {
+			
+					// Post2 Document
+					document = new Document(path);
+					
+					// Post3 Parse document
+					parseDocument(document);
+					
+					// Post4 Evaluate assignment
+					document.calculateResult();
+				
+					// Post5 Create hash string
+					Secret secret = getSecret();
+					document.createHashString(secret.getID(), secret.getIssuer(), 
+							secret.getSubject(), secret.getSecret());
+					
+					// Post6 Create graded assignment
+					document.createGradedAssignment();
+					
+					System.out.println("\nGraded Document: " 
+							+ path.getFileName());
+				
+				// Post7 Handle exceptions
+				} catch (InvalidCommentException e) {
+					
+					displayInvalidCommentException(e);
+							
+				}
+			
+			} // End for
+			
+			System.out.println("\nFINISHED GRADING. Check 'GRADED' directory "
+					+ "for graded assignments.");
+		
+		// Post7 Handle exceptions
+		} catch (IOException e) {
+			
+			// Directory stream, File input stream, Files copy, deleteDirectory
+			System.out.println("\nERROR: Could not process files in directory "
+					+ "entered.");
+		}
+			
 	}
 
 }

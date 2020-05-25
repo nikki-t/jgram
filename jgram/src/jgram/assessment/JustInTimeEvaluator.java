@@ -20,8 +20,6 @@ public class JustInTimeEvaluator implements Evaluator {
 		checkpointList = cList;
 	}
 	
-	// Instance method(s)
-	
 	/**
 	 * Calculates the total grade based on the checkpoint list that contains
 	 * a list of grades and weights. Creates a result object to store the 
