@@ -59,30 +59,7 @@ public class Document {
 	private static final String GRADE_MAPPING = "GRADEMAPPING";
 	private static final String TABLE_TITLE = "JGRAM RESULTS";
 	
-	/**
-	 * Intent: Open and return an XWPFDocument object that represents a Word
-	 * document.
-	 *  
-	 * @param path 
-	 * @return XWPFDocument object
-	 * @throws IOException
-	 */
-	private static XWPFDocument retrieveXWPFDocument(Path path) 
-			throws IOException {
-		
-		// Get file path to Word Document
-		File file = path.toFile();
-		FileInputStream fileInputStream = 
-				new FileInputStream(file.getAbsolutePath());
-		
-		// Create XWPFDocument
-		XWPFDocument documentContent = new XWPFDocument(fileInputStream);
-		
-		// Close input stream
-		fileInputStream.close();
-		
-		return documentContent;
-	}
+	
 	// Instance variable(s)
 	private Path assignmentPath;
 	private ArrayList<Comment> commentList;
@@ -549,6 +526,31 @@ public class Document {
 		
 		// Post3 Decode hash string
 		jwt.decode(this);
+	}
+	
+	/**
+	 * Intent: Open and return an XWPFDocument object that represents a Word
+	 * document.
+	 *  
+	 * @param path 
+	 * @return XWPFDocument object
+	 * @throws IOException
+	 */
+	private static XWPFDocument retrieveXWPFDocument(Path path) 
+			throws IOException {
+		
+		// Get file path to Word Document
+		File file = path.toFile();
+		FileInputStream fileInputStream = 
+				new FileInputStream(file.getAbsolutePath());
+		
+		// Create XWPFDocument
+		XWPFDocument documentContent = new XWPFDocument(fileInputStream);
+		
+		// Close input stream
+		fileInputStream.close();
+		
+		return documentContent;
 	}
 	
 	public void setCommentList(ArrayList<Comment> cList) {
