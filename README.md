@@ -3,8 +3,10 @@
 ## Project Overview
 Just in Time Grading Messages (JGRAM) is a program conceived of by Professor Braude at Boston University Metropolitan College to better connect strades. The goal of the program is to provide assignment feedback through the use of checkpoints located in key points throughout the assignment. Along with the inclusion of feedback, each checkpoint has a weight and grade. JGRAM produces a results table that collocates all checkpoints in one place which provides an overview of the student’s grade. The checkpoints help students to understand how they met expectations of the assignment and where to focus their future work in the course.
 
+JGRAM provides three main operations: Grade evaluation which calculates and creates a table of assignment grading results, Tamper Detection which evaluates previously graded assignments and determines if the checkpoints or grade mapping has been modified, and New Document validation which validates that documents are ready for grading by the grader (i.e. instructor, professor, facilitator, teaching assistant, etc.).
+
 ## Installation
-In Eclispse:
+In Eclipse:
 1. Clone Git Respository
 2. Create new Java project
 3. Convert project to a Maven project by right-clicking on the project in Project Explorer and clicking 'Configure' > 'Maven Project'
@@ -26,7 +28,7 @@ you would like to run
 .
 ├── README.md
 └── jgram
-    ├── README-A2.txt
+    ├── README-A3.txt
     ├── pom.xml
     └── src
         └── jgram
@@ -60,8 +62,11 @@ you would like to run
             │   ├── GradeMappingTest.java
             │   ├── JWTTest.java
             │   ├── JustInTimeEvaluatorTest.java
+            │   ├── LinkedListTest.java
+            │   ├── NewDocumentTaskTest.java
             │   ├── ResultTest.java
             │   ├── TamperTaskTest.java
+            │   ├── TaskTest.java
             │   ├── TestUtilities.java
             │   └── resources
             │       ├── GRADED
@@ -71,9 +76,12 @@ you would like to run
             │       │   └── report.txt
             │       ├── document-test.docx
             │       ├── eval-task-test.docx
+            │       ├── new-doc-test-invalid.docx
+            │       ├── new-doc-test-valid.docx
             │       ├── report.txt
             │       └── tamper-task-test.docx
             └── utilities
+                ├── LinkedList.java
                 └── Validation.java
 ```
 ## Test
