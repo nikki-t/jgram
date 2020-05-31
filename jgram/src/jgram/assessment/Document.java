@@ -10,24 +10,25 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.poi.xwpf.usermodel.XWPFComment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblWidth;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblWidth;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblLayoutType;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblLayoutType;
 
 import jgram.exceptions.InvalidCheckpointException;
 import jgram.exceptions.InvalidCommentException;
 import jgram.exceptions.InvalidGradeMappingException;
 import jgram.exceptions.InvalidTableException;
 import jgram.security.JWT;
+import jgram.security.Secret;
+import jgram.utilities.LinkedList;
 
 /**
  * Intent: Represent a Word Document assignment with comments that contain
@@ -50,6 +51,16 @@ import jgram.security.JWT;
  * results to a copy of the assignment.
  * Postcondition7 (Write results): Write results of Document grading to a txt
  * file named 'saved_jgrams.txt'.
+ * 
+ * References:
+ * 
+ * Aided in the use of Apache POI API:
+ * Apache POI - Component Overview. (n.d.). Retrieved from Apache POI: http://poi.apache.org/components/
+ * Apache POI - the Java API for Microsoft Documents. (n.d.). Retrieved from Apache POI: http://poi.apache.org/index.html
+ * Apache POI JavaDocs. (n.d.). Retrieved from Apache POI: http://poi.apache.org/apidocs/4.1/
+ * Is there a way to set the width of a column in XWPFTableCell? . (2012, 11 16). Retrieved from Apche POI > POI - User: http://apache-poi.1045710.n5.nabble.com/Is-there-a-way-to-set-the-width-of-a-column-in-XWPFTableCell-td5711491.html
+ * examples. (n.d.). Retrieved from Apache POI: http://svn.apache.org/repos/asf/poi/trunk/src/examples/src/org/apache/poi/xwpf/usermodel/examples/
+ * 
  */
 public class Document {
 	
@@ -59,28 +70,27 @@ public class Document {
 	private static final String GRADE_MAPPING = "GRADEMAPPING";
 	private static final String TABLE_TITLE = "JGRAM RESULTS";
 	
-	
 	// Instance variable(s)
 	private Path assignmentPath;
-	private ArrayList<Comment> commentList;
-	private ArrayList<Checkpoint> checkpointList;
+	private LinkedList<Comment> commentList;
+	private LinkedList<Checkpoint> checkpointList;
 	private GradeMapping gradeMapping;
 	private Result result;
 	private String hashString;
 	
-	private XWPFTable table;
+	private XWPFTable table;;
 	
 	// Constructor(s)
 	public Document() {
-		commentList = new ArrayList<>();
-		checkpointList = new ArrayList<>();
+		commentList = new LinkedList<>();
+		checkpointList = new LinkedList<>();
 		gradeMapping = new GradeMapping();
-	};
+	}
 	
 	public Document(Path path) {
 		assignmentPath = path;
-		commentList = new ArrayList<>();
-		checkpointList = new ArrayList<>();
+		commentList = new LinkedList<>();
+		checkpointList = new LinkedList<>();
 		gradeMapping = new GradeMapping();
 	}
 	
@@ -200,14 +210,13 @@ public class Document {
 	 * @param issuer Name of JWT issuer
 	 * @param subject JWT subject
 	 */
-	public void createHashString(String id, String issuer, String subject,
-		String secret) {
+	public void createHashString(Secret secret) {
 		
 		// Create JWT object
 		JWT jwt = new JWT(secret);
 		
 		// Encode Document's Result and GradeMapping objects
-		jwt.encode(id, issuer, subject, this);
+		jwt.encode(this);
 		
 	}
 	
@@ -237,18 +246,17 @@ public class Document {
 	 * Postondition3 (Total grade and hash string row): The total grade and
 	 * hash string for the graded assignment have been stored in the last
 	 * row in the table.
+	 * Postcondition4 (Set each cell's width): Each cell width is adjusted to
+	 * allow for the best display of cell content.
 	 * 
 	 * @param documentContent
 	 */
 	private void createTable(XWPFDocument documentContent) {
 		
-		// Create XWPF table object
+		// Create XWPF table object and set table width
 		table = documentContent.createTable();
-		
-		// Set table width TODO ??
-		CTTblWidth tableWidth = table.getCTTbl().addNewTblPr().addNewTblW();
-		tableWidth.setType(STTblWidth.DXA);
-		tableWidth.setW(BigInteger.valueOf(6000));
+		CTTblLayoutType type = table.getCTTbl().getTblPr().addNewTblLayout();
+		type.setType(STTblLayoutType.FIXED);
 		
 		// Post1 Column headers
 		setTableColumnHeader();
@@ -259,17 +267,20 @@ public class Document {
 		// Post3 Total grade and hash string row
 		setResultRow();
 		
+		// Post4 Set each cell's width	
+		setCellWidth();
+		
 	}
 	
 	public Path getAssignmentName() {
 		return assignmentPath;
 	}
 	
-	public ArrayList<Checkpoint> getCheckpointList() {
+	public LinkedList<Checkpoint> getCheckpointList() {
 		return checkpointList;
 	}
 	
-	public ArrayList<Comment> getCommentList() {
+	public LinkedList<Comment> getCommentList() {
 		return commentList;
 	}
 	
@@ -344,18 +355,16 @@ public class Document {
 		resultTable.append(String.format("%4s %8s %7s %10s", "C#", "Weight",
 				"Grade", "Feedback"));
 
-		// Display checkpoints
-		HashMap<Integer, Checkpoint> checkpointMap = result.getCheckpointMap();
-		for (Map.Entry<Integer, Checkpoint> entry : checkpointMap.entrySet()) {
-
-			int checkpointID = entry.getKey();
-			Checkpoint checkpoint = entry.getValue();
+		// Display checkpoints		
+		for (Checkpoint checkpoint : checkpointList) {
 			int weight = checkpoint.getWeight();
 			int grade = checkpoint.getGrade();
 			String feedback = checkpoint.getFeedback();
-
-			resultTable.append(String.format("\n%4d %8d %7d   %s", checkpointID,
-				weight, grade, feedback));
+			int id = checkpoint.getID();
+			
+			resultTable.append(String.format("\n%4d %8d %7d   %s", id,
+					weight, grade, feedback));
+			
 		}
 
 		// Display total grade
@@ -426,12 +435,6 @@ public class Document {
 			throw new InvalidCommentException(message, invalidCommentList);
 		}
 		
-		// Test for presence of checkpoints
-		if (checkpointList.isEmpty()) {
-			String message = "\nERROR: No checkpoints detected in file";
-			throw new InvalidCommentException(message);
-		}
-		
 	}
 	
 	/**
@@ -470,11 +473,7 @@ public class Document {
 		// Close open resources
 		documentContent.close();
 		
-		// Check if any comments were found in the document
-		if (commentList.isEmpty()) {
-			throw new InvalidCommentException("\nERROR: No comments were found "
-					+ "in file");
-		}
+		
 	}
 	
 	/**
@@ -490,11 +489,6 @@ public class Document {
 				gradeMapping = comment.extractGradeMapping();
 				break;
 			}
-		}
-		
-		// Set default grade mapping if one is not provided in the comments
-		if (gradeMapping.getLimits().isEmpty()) {
-			setDefaultGradeMapping();
 		}
 		
 	}
@@ -514,7 +508,7 @@ public class Document {
 	 * stored in Document object.
 	 * @param secret String that represents user secret
 	 */
-	public void retrieveResult(String secret) throws IOException, 
+	public void retrieveResult(Secret secret) throws IOException, 
 			InvalidTableException, InvalidCheckpointException,	
 			InvalidGradeMappingException {
 		
@@ -553,7 +547,47 @@ public class Document {
 		return documentContent;
 	}
 	
-	public void setCommentList(ArrayList<Comment> cList) {
+	/**
+	 * Intent: Set the cell width for each cell in the table instance variable.
+	 */
+	private void setCellWidth() {
+		
+		// Create a list of table widths
+		int[] columnWidth = {1000, 1000, 1000, 6000};
+		
+		// Get a list of the rows
+		List<XWPFTableRow> rows = table.getRows();
+		
+		// Loop through each row
+		for (XWPFTableRow row : rows) {
+			
+			// Get a list of the cells
+			List<XWPFTableCell> cells = row.getTableCells();
+			
+			// Loop through each cell
+			int i = 0;
+			for (XWPFTableCell cell : cells) {
+				
+				// Set the XML element that holds each cell's metadata
+				cell.getCTTc()
+					.addNewTcPr()
+					.addNewTcW()
+					.setW(BigInteger.valueOf(columnWidth[i]));
+				
+				i++;
+				
+			}
+		}
+		
+		
+		
+	}
+	
+	public void setCheckpointList(LinkedList<Checkpoint> cpList) {
+		checkpointList = cpList;
+	}
+	
+	public void setCommentList(LinkedList<Comment> cList) {
 		commentList = cList;
 	}
 	
@@ -561,7 +595,7 @@ public class Document {
 	 * Intent: Set default grade mapping for Document and print message to 
 	 * console to notify user.
 	 */
-	private void setDefaultGradeMapping() {
+	public void setDefaultGradeMapping() {
 		
 		System.out.println("\nDid not find a grade mapping for assignment:"
 				+ "\n\t" + assignmentPath.getFileName().toString());
@@ -603,21 +637,14 @@ public class Document {
 	 */
 	private void setTableCheckpointRows() {
 		
-		// Create a row for each Checkpoint from Result object
-		HashMap<Integer, Checkpoint>  checkpointMap = result.getCheckpointMap();
-		for (Map.Entry<Integer, Checkpoint> entry : checkpointMap.entrySet()) {
-			
-			int id = entry.getKey();
-			Checkpoint checkpoint = entry.getValue();
-			
+		// Create a row for each Checkpoint
+		for (Checkpoint checkpoint : checkpointList) {
 			XWPFTableRow checkpointRow = table.createRow();
-			checkpointRow.getCell(0).setText("" + id);
+			checkpointRow.getCell(0).setText("" + checkpoint.getID());
 			checkpointRow.getCell(1).setText("" + checkpoint.getWeight());
 			checkpointRow.getCell(2).setText("" + checkpoint.getGrade());
 			checkpointRow.getCell(3).setText("" + checkpoint.getFeedback());
-			
 		}
-		
 		
 	}
 	

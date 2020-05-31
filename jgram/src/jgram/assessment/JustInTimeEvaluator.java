@@ -1,6 +1,6 @@
 package jgram.assessment;
 
-import java.util.ArrayList;
+import jgram.utilities.LinkedList;
 
 /**
  * Intent: Represents an evaluator that evaluates assignment grades based on
@@ -13,10 +13,10 @@ import java.util.ArrayList;
 public class JustInTimeEvaluator implements Evaluator {
 	
 	// Instance variable(s)
-	private final ArrayList<Checkpoint> checkpointList;
+	private final LinkedList<Checkpoint> checkpointList;
 	
 	// Constructor(s)
-	public JustInTimeEvaluator(ArrayList<Checkpoint> cList) {
+	public JustInTimeEvaluator(LinkedList<Checkpoint> cList) {
 		checkpointList = cList;
 	}
 	
@@ -30,12 +30,7 @@ public class JustInTimeEvaluator implements Evaluator {
 	@Override
 	public Result evaluate() {
 		
-		Result result = new Result();
-		
-		// Check if checkpoint list is empty
-		if (checkpointList.isEmpty()) {
-			return result;
-		}
+		Result result = new Result(checkpointList);
 		
 		// Store the total sum of grades * weights and the sum of weights
 		float sumGradeWeights = 0;
@@ -47,8 +42,6 @@ public class JustInTimeEvaluator implements Evaluator {
 			sumGradeWeights += checkpoint.getGrade() * checkpoint.getWeight();
 			sumWeights += checkpoint.getWeight();
 			
-			// Add checkpoint to Result
-			result.addCheckpoint(checkpoint);
 			
 		}
 		

@@ -1,9 +1,8 @@
 package jgram.security;
 
 import java.security.Key;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
@@ -35,17 +34,39 @@ public class JWT {
 	private static final String CLAIM_GRADE_PREFIX = "-Grade";
 	private static final String CLAIM_FEEDBACK_PREFIX = "-Feedback";
 	private static final String CLAIM_GRADE_MAPPING = "GradeMapping";
-	private static final String CLAIM_TOTAL_CP = "TotalCP";
 	private static final String CLAIM_TOTAL_GRADE = "TotalGrade";
+	private static final String CLAIM_CP_INDEXES = "CPIndexes";
 	
 	// Instance Variable(s)
 	private SignatureAlgorithm signatureAlgorithm;
-	private String secret;
+	private Secret secret;
 	
 	// Constructor(s)
-	public JWT(String uSecret) {
+	public JWT(Secret uSecret) {
 		signatureAlgorithm = SignatureAlgorithm.HS256;
 		secret = uSecret;
+	}
+	
+	/**
+	 * Intent: Build a list of Checkpoint ID numbers in order to retrieve
+	 * result in the decode process.
+	 * 
+	 * @param result
+	 * @return
+	 */
+	private ArrayList<Integer> buildCPIndex(Result result) {
+		
+		// Array list to hold comment indexes
+		ArrayList<Integer> checkpointIndexes = new ArrayList<>();
+		
+		// Loop through each Checkpoint and extract ID
+		for (Checkpoint checkpoint : result.getCheckpointList()) {
+			
+			checkpointIndexes.add(checkpoint.getID());
+		}
+		
+		return checkpointIndexes;
+		
 	}
 	
 	/**
@@ -56,19 +77,15 @@ public class JWT {
 	private void buildResultClaim(JwtBuilder builder, Result result) {
 		
 		// Add Checkpoints to claim
-		HashMap<Integer, Checkpoint>  checkpointMap = result.getCheckpointMap();
-		for (Map.Entry<Integer, Checkpoint> entry : checkpointMap.entrySet()) {
-			
-			Integer checkpointID = entry.getKey();
-			Checkpoint checkpoint = entry.getValue();
+		for (Checkpoint checkpoint: result.getCheckpointList()) {
 			// Weight
-			builder.claim(checkpointID + CLAIM_WEIGHT_PREFIX,
+			builder.claim(checkpoint.getID() + CLAIM_WEIGHT_PREFIX,
 				checkpoint.getWeight());
 			// Grade
-			builder.claim(checkpointID + CLAIM_GRADE_PREFIX, 
+			builder.claim(checkpoint.getID() + CLAIM_GRADE_PREFIX, 
 				checkpoint.getGrade());
 			// Feedback
-			builder.claim(checkpointID + CLAIM_FEEDBACK_PREFIX, 
+			builder.claim(checkpoint.getID() + CLAIM_FEEDBACK_PREFIX, 
 					checkpoint.getFeedback());
 			
 		}
@@ -83,6 +100,8 @@ public class JWT {
 	 * 
 	 * Postcondition1 (Create Result): A Result object is created from the hash 
 	 * string and stored in the Document object.
+	 * Postcnodition2 (Create Checkpoint list): A list of Checkpoint objects is
+	 * created from the Result object.
 	 * Postcondition2 (Create GradeMapping): A GradeMapping object is created
 	 * from the hash string and stored in the Document object.
 	 * @param document Document object
@@ -94,14 +113,19 @@ public class JWT {
 		
 		// Create parser to parse hash string and set secret as signing key
 		Claims claims = Jwts.parser()
-			.setSigningKey(DatatypeConverter.parseBase64Binary(secret))
+			.setSigningKey(DatatypeConverter.parseBase64Binary(secret
+					.getSecretString()))
 			.parseClaimsJws(jwt)
 			.getBody();
 		
-		// Post1
-		document.setResult(decodeResult(claims));
+		// Post1 Create Result
+		Result result = decodeResult(claims);
+		document.setResult(result);
 		
-		// Post2
+		// Post2 Create Checkpoint list
+		document.setCheckpointList(result.getCheckpointList());		
+		
+		// Post3 Create GradeMapping
 		document.setGradeMapping(decodeGradeMapping(claims));
 		
 	}
@@ -176,11 +200,15 @@ public class JWT {
 		
 		Result result = new Result();
 		
-		// Post1 Parse checkpoints
-		int totalCheckpoints = (Integer) claims.get(CLAIM_TOTAL_CP);
+		// Obtain claim with checkpoint indexes
+		String cpIndexes = (String) claims.get(CLAIM_CP_INDEXES);
+		String[] indexList = convertToArray(cpIndexes);
 		
+		// Post1 Parse checkpoints		
 		// Loop through checkpoints in claim
-		for (int i = 1; i <= totalCheckpoints; i++) {
+		for (String index : indexList) {
+			// Index and Checkpoint ID
+			int i = Integer.parseInt(index);
 			// Weight
 			int weight = (Integer) claims.get(i + CLAIM_WEIGHT_PREFIX);
 			// Grade
@@ -188,7 +216,7 @@ public class JWT {
 			// Feedback
 			String feedback = (String) claims.get(i + CLAIM_FEEDBACK_PREFIX);
 			// Add checkpoint to result
-			Checkpoint checkpoint = new Checkpoint(weight, grade, feedback);
+			Checkpoint checkpoint = new Checkpoint(weight, grade, feedback, i);
 			result.addCheckpoint(checkpoint);
 		}
 		
@@ -198,6 +226,26 @@ public class JWT {
 		result.setTotalGrade(totalGrade);
 		
 		return result;
+		
+	}
+	
+	/**
+	 * Intent: Convert String into an array by splitting the string on commas
+	 * and spaces.
+	 * 
+	 * @param cpIndexes
+	 * 
+	 * @return String array
+	 */
+	private String[] convertToArray(String cpIndexes) {
+		
+		// Obtain substring that contains only indexes separated by commas
+		String subString = cpIndexes.substring(1, cpIndexes.length() - 1);
+		
+		// Split the array on the comma
+		String[] strIndexArray = subString.split(", ");
+		
+		return strIndexArray;
 		
 	}
 	
@@ -218,21 +266,21 @@ public class JWT {
 	 * @param subject JWT subject
 	 * @param document Document object
 	 */
-	public void encode(String id, String issuer, String subject, 
-		Document document) {
+	public void encode(Document document) {
 		
 		Date date = new Date(System.currentTimeMillis());
 		
 		// Post1 Sign JWT
-		byte[] secretKey = DatatypeConverter.parseBase64Binary(secret);
+		byte[] secretKey = DatatypeConverter.parseBase64Binary(secret
+				.getSecretString());
 		Key signingKey = new SecretKeySpec(secretKey, 
 				signatureAlgorithm.getJcaName());
 		
 		// Post2 Build JWT using registered claim names
-		JwtBuilder builder = Jwts.builder().setId(id)
+		JwtBuilder builder = Jwts.builder().setId(secret.getID())
 			.setIssuedAt(date)
-			.setSubject(subject)
-			.setIssuer(issuer)
+			.setSubject(secret.getSubject())
+			.setIssuer(secret.getIssuer())
 			.signWith(signatureAlgorithm, signingKey);
 		
 		// Post2 Build JWT with custom claim data
@@ -241,12 +289,13 @@ public class JWT {
 		Result result = document.getResult();
 		buildResultClaim(builder, result);
 		
+		// Checkpoint Indexes
+		ArrayList<Integer> cpIndexes = buildCPIndex(result);
+		builder.claim(CLAIM_CP_INDEXES, cpIndexes.toString());
+		
 		// GradeMapping
 		GradeMapping gradeMapping = document.getGradeMapping();
 		builder.claim(CLAIM_GRADE_MAPPING, gradeMapping.toString());
-		
-		// Total Number of Checkpoints
-		builder.claim(CLAIM_TOTAL_CP, result.getCheckpointMap().size());
 		
 		// Total Grade
 		builder.claim(CLAIM_TOTAL_GRADE, result.getTotalGrade());

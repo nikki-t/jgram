@@ -117,7 +117,9 @@ public class Comment {
 			}
 			
 			// Post3 Checkpoint creation
-			Checkpoint checkpoint = new Checkpoint(weight, grade, feedback);
+			int cpID = Integer.parseInt(id) + 1;
+			Checkpoint checkpoint = new Checkpoint(weight, grade, feedback, 
+					cpID);
 			return checkpoint;
 			
 		} catch (ArrayIndexOutOfBoundsException | NumberFormatException 

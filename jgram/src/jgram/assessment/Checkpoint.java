@@ -28,6 +28,7 @@ public class Checkpoint {
 	private int weight;
 	private int grade;
 	private String feedback;
+	private int id;
 	
 	// Constructor(s) - Post1
 	/**
@@ -35,18 +36,18 @@ public class Checkpoint {
 	 * 
 	 * Postcondition1 (Weight): Weight is a valid integer between MIN_WEIGHT
 	 * and MAX_WEIGHT
-	 * 
 	 * Postcondition2 (Grade):  Grade is a valid integer between MIN_GRADE and
 	 * MAX_GRADE
-	 * 
 	 * Postcondition3 (Feedback): User feedback is stored as feedback.
+	 * Postcondition4 (ID): The comment id is stored as the checkpoint id.
+	 * 
 	 * @param inputWeight
 	 * @param inputGrade
 	 * @param inputFeedback
 	 * @throws InvalidGradeMappingException
 	 */
-	public Checkpoint(int inputWeight, int inputGrade, String inputFeedback) 
-			throws InvalidCheckpointException {
+	public Checkpoint(int inputWeight, int inputGrade, String inputFeedback, 
+			int inputID) throws InvalidCheckpointException {
 			
 		// Post1 Weight
 		if (inputWeight >= MIN_WEIGHT  && inputWeight <= MAX_WEIGHT) {
@@ -66,6 +67,9 @@ public class Checkpoint {
 		
 		// Post3 Feedback
 		feedback = inputFeedback;
+		
+		// Post4 ID
+		id = inputID;
 		
 	}
 	
@@ -95,6 +99,9 @@ public class Checkpoint {
 			return false;
 		}
 		if (!(this.feedback.equals(checkpoint.feedback))) {
+			return false;
+		}
+		if (this.id != checkpoint.id) {
 			return false;
 		}
 		
@@ -128,13 +135,22 @@ public class Checkpoint {
 	}
 	
 	/**
+	 * Returns the checkpoint id.
+	 * @return Integer id value
+	 */
+	public int getID() {
+		return id;
+	}
+	
+	
+	/**
 	 * Create and return a String of Checkpoint's state.
 	 * @return String representation of Checkpoint's current state
 	 */
 	@Override
 	public String toString() {
-		return String.format("Weight: %d, Grade: %d, Feedback: %s", 
-				weight, grade, feedback);
+		return String.format("Weight: %d, Grade: %d, Feedback: %s, ID: %d", 
+				weight, grade, feedback, id);
 	}
 
 }

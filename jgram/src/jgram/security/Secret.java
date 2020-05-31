@@ -15,11 +15,11 @@ public class Secret {
 	private static final String SUBJECT = "JGRAM";
 	
 	// Instance variable(s)
-	private String secret;
+	private String secretString;
 	
 	// Constructor(s)
 	public Secret(String userSecret) {
-		secret = userSecret;
+		secretString = userSecret;
 	}
 	
 	// Accessor
@@ -31,8 +31,8 @@ public class Secret {
 		return ISSUER;
 	}
 	
-	public String getSecret() {
-		return secret;
+	public String getSecretString() {
+		return secretString;
 	}
 	
 	public String getSubject() {
@@ -40,8 +40,8 @@ public class Secret {
 	}
 	
 	// Mutator(s)
-	public void setSecret(String userSecret) {
-		secret = userSecret;
+	public void setSecretString(String userSecret) {
+		secretString = userSecret;
 	}
 	
 

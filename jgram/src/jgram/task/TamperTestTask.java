@@ -3,8 +3,6 @@ package jgram.task;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import io.jsonwebtoken.MalformedJwtException;
@@ -90,33 +88,6 @@ public class TamperTestTask extends Task {
 	}
 	
 	/**
-	 * Intent: Determine if the path's parent directory contains 'GRADED'
-	 * sub-directory.
-	 * 
-	 * @param path
-	 * @return boolean
-	 */
-	private boolean containsGradedDirectory(Path path) throws IOException {
-		
-		Path parentDirectory = path.getParent();
-		
-		DirectoryStream<Path> directoryStream = 
-				Files.newDirectoryStream(parentDirectory);
-		
-		boolean isGradedDirectory = false;
-		
-		for (Path p : directoryStream) {
-			String filename = p.getFileName().toString();
-			if (filename.contains("GRADED")) {
-				isGradedDirectory = true;
-			}
-		}
-		
-		return isGradedDirectory;
-		
-	}
-	
-	/**
 	 * Intent: PrintWriter object is created for writing or appending to 
 	 * report.txt.
 	 * 
@@ -130,15 +101,9 @@ public class TamperTestTask extends Task {
 		if (getFileList().isEmpty()) {
 			throw new FileNotFoundException("\nNo Word documents were found.");
 		}
-					
-		// Determine if assignments have been graded
-		Path firstFile = getFileList().get(0);
-		if (!(containsGradedDirectory(firstFile))) {
-			throw new FileNotFoundException("\nAssignments have not been graded. "
-					+ "Please grade assignments first.");
-		}
 		
 		// Create PrintWriter
+		Path firstFile = getFileList().first();
 		reportFilename = getReportFilename(firstFile);
 		outStream = new PrintWriter(reportFilename);
 	}
@@ -237,6 +202,7 @@ public class TamperTestTask extends Task {
 					String error = e.getMessage() + "\n\tDetected in retrieval "
 							+ "of file: ";
 					displayException(error);
+					System.out.println("\n\tCould not generate report for file.");
 				
 				} catch (MalformedJwtException e) {
 					// JWT
@@ -256,9 +222,8 @@ public class TamperTestTask extends Task {
 			
 		} catch (IOException e) {
 			// Directory stream, File input stream, Files copy, getHashStringFromFile
-			String error = "\nERROR: Could not process files in directory "
-					+ "entered.";
-			System.out.println(error);
+			System.out.println("\nERROR: Could not process files in directory "
+					+ "entered.");
 		
 		} catch (SignatureException | IllegalArgumentException e) {
 			// JWT
@@ -285,12 +250,32 @@ public class TamperTestTask extends Task {
 			throws IOException, InvalidCommentException {
 		
 		currentDocument = new Document(path);	
+		// Comments
 		currentDocument.parseComments();
+		// Test for presence of comments
+		if (currentDocument.getCommentList().isEmpty()) {
+			throw new InvalidCommentException("\nERROR: No comments were found "
+					+ "in file");
+		}
+		
+		// Grade mapping
 		currentDocument.parseGradeMapping();
+		// Set default grade mapping if one is not provided in the comments
+		if (currentDocument.getGradeMapping().getLimits().isEmpty()) {
+			currentDocument.setDefaultGradeMapping();
+		}
+		
+		// Checkpoints
 		currentDocument.parseCheckpoints();
+		// Test for presence of checkpoints
+		if (currentDocument.getCheckpointList().isEmpty()) {
+			String message = "\nERROR: No checkpoints detected in file";
+			throw new InvalidCommentException(message);
+		}
+		
+		// Result
 		currentDocument.calculateResult();
-		currentDocument.createHashString(secret.getID(), secret.getIssuer(), 
-			secret.getSubject(), secret.getSecret());
+		currentDocument.createHashString(secret);
 	}
 	
 	/**
@@ -307,7 +292,7 @@ public class TamperTestTask extends Task {
 			InvalidCheckpointException, InvalidGradeMappingException {
 		
 		previousDocument = new Document(path);
-		previousDocument.retrieveResult(secret.getSecret());
+		previousDocument.retrieveResult(secret);
 
 		
 	}

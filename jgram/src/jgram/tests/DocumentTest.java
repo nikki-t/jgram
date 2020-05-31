@@ -25,6 +25,7 @@ import jgram.exceptions.InvalidCommentException;
 import jgram.exceptions.InvalidGradeMappingException;
 import jgram.exceptions.InvalidTableException;
 import jgram.security.Secret;
+import jgram.utilities.LinkedList;
 
 class DocumentTest {
 	
@@ -42,8 +43,7 @@ class DocumentTest {
 		document.parseGradeMapping();
 		document.parseCheckpoints();
 		document.calculateResult();
-		document.createHashString(secret.getID(), secret.getIssuer(), 
-				secret.getSubject(), secret.getSecret());
+		document.createHashString(secret);
 		document.createGradedAssignment();
 	}
 	
@@ -130,7 +130,7 @@ class DocumentTest {
 		Document gradedDocument = new Document(gradedDocumentPath);
 		try {
 			
-			gradedDocument.retrieveResult(secret.getSecret());
+			gradedDocument.retrieveResult(secret);
 			
 		} catch (IOException | InvalidGradeMappingException 
 				| InvalidTableException | InvalidCheckpointException e) {
@@ -145,7 +145,7 @@ class DocumentTest {
 	}
 	
 	/**
-	 * Test that an ArrayList of Checkpoint objects is created when 
+	 * Test that an LinkedList of Checkpoint objects is created when 
 	 * Document.parseCheckponts is called.
 	 */
 	@Test
@@ -162,23 +162,25 @@ class DocumentTest {
 			document.parseComments();			
 			document.parseCheckpoints();
 			
-			// Create an ArrayList of checkpoints for comparison
-			ArrayList<Checkpoint> checkpointList = new ArrayList<>();
+			// Create an LinkedList of checkpoints for comparison
+			LinkedList<Checkpoint> checkpointList = new LinkedList<>();
 			
 			checkpointList.add(new Checkpoint(3, 85, "Throws "
 					+ "ArrayIndexOutOfBoundsException; watch out for the " 
 					+ "Boolean condition that controls the for loop’s "
 					+ "execution. This for loop executes one more time than " 
 					+ "you would want it to because of the greater than or "  
-					+ "equal to sign."));
+					+ "equal to sign.", 1));
 			checkpointList.add(new Checkpoint(3, 100, "Excellent work. Please "
-					+ "make sure to include comments next time."));
+					+ "make sure to include comments next time.", 2));
 			checkpointList.add(new Checkpoint(4, 90, "Per the prompt, "
 					+ "the method should return the first element in the array; " 
 					+ "use the break keyword to exit the for loop once the " 
-					+ "element is found."));
+					+ "element is found.", 3));
 			
-			assertEquals(checkpointList, document.getCheckpointList());
+			
+			assertTrue(Arrays.deepEquals(checkpointList.toArray(), 
+					document.getCheckpointList().toArray()));
 		
 		} catch (IOException e) {
 			fail("Attempted to parse invalid document for comments."); 
@@ -193,7 +195,7 @@ class DocumentTest {
 	}
 	
 	/**
-	 * Test that an ArrayList of Comment objects is created when 
+	 * Test that an  of Comment objects is created when 
 	 * Document.parseComments is called.
 	 */
 	@Test

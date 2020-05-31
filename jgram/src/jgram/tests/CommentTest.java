@@ -45,7 +45,7 @@ class CommentTest {
 		try {
 			
 		Checkpoint checkpoint1 = comment.extractCheckpoint(gradeMapping);
-		Checkpoint checkpoint2 = new Checkpoint(3, 100, "Excellent work.");
+		Checkpoint checkpoint2 = new Checkpoint(3, 100, "Excellent work.", 1);
 		assertEquals(checkpoint1, checkpoint2);
 		
 		} catch (InvalidCheckpointException | InvalidCommentException e) {

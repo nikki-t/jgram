@@ -1,9 +1,6 @@
 package jgram.assessment;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Set;
+import jgram.utilities.LinkedList;
 
 /**
  * Intent: Represent the result of grading an assignment including a
@@ -20,41 +17,24 @@ public class Result {
 	
 	// Instance variable(s)
 	private float totalGrade;
-	private int checkpointID = 1;
-	private HashMap<Integer, Checkpoint> checkpointMap;
+	private LinkedList<Checkpoint> checkpointList;
 	
 	// Constructor(s)
 	public Result() {
-		checkpointMap = new HashMap<>();
+		checkpointList = new LinkedList<>();
+	}
+	
+	public Result(LinkedList<Checkpoint> cList) {
+		checkpointList = cList;
 	}
 	
 	/**
-	 * Adds a checkpoint with an ID number to the checkpoint map.
-	 * @param checkpoint Checkpoint object
+	 * Intent: Add a Checkpoint object to Result's Checkpoint list
+	 * 
+	 * @param checkpoint
 	 */
 	public void addCheckpoint(Checkpoint checkpoint) {
-		checkpointMap.put(checkpointID, checkpoint);
-		checkpointID++;
-	}
-	
-	/**
-	 * Test if keys in checkpoint map are equal.
-	 * @param result Result object to compare to
-	 * @return boolean value that indicates if equal
-	 */
-	private boolean compareKeys(Result result) {
-		
-		boolean isEqual = true;
-		
-		Set<Integer> thisKeys = this.checkpointMap.keySet();
-		Set<Integer> parameterKeys = result.checkpointMap.keySet();
-		
-		if (!thisKeys.equals(parameterKeys)) {
-			isEqual = false;
-		}
-		
-		return isEqual;
-		
+		checkpointList.add(checkpoint);
 	}
 	
 	/**
@@ -62,20 +42,19 @@ public class Result {
 	 * @param result Result object to compare to
 	 * @return boolean value that indicates if equal
 	 */
-	private boolean compareValues(Result result) {
+	private boolean compareCheckpoints(Result result) {
 		
 		boolean isEqual = true;
 		
-		Collection<Checkpoint> thisValues = this.checkpointMap.values();
-		ArrayList<Checkpoint> thisCheckpoints = new ArrayList<>(thisValues);
+		// Convert both result list's to arrays
+		Checkpoint[] thisCheckpointArray = this.checkpointList.toArray();
+		Checkpoint[] otherCheckpointArray = result.checkpointList.toArray();
 		
-		Collection<Checkpoint> paramValues = result.checkpointMap.values();
-		ArrayList<Checkpoint> paramCheckpoints = new ArrayList<>(paramValues);
-		
-		for (int i = 0; i < thisCheckpoints.size(); i++) {
+		// Compare each Checkpoint in the list
+		for (int i = 0; i < thisCheckpointArray.length; i++) {
 			
-			Checkpoint thisCheckpoint = thisCheckpoints.get(i);
-			Checkpoint paramCheckpoint = paramCheckpoints.get(i);
+			Checkpoint thisCheckpoint = thisCheckpointArray[i];
+			Checkpoint paramCheckpoint = otherCheckpointArray[i];
 			
 			if (!(thisCheckpoint.equals(paramCheckpoint))) {
 				isEqual = false;
@@ -114,18 +93,13 @@ public class Result {
 			return false;
 		}
 		
-		// CheckpointMap size
-		if(this.checkpointMap.size() != result.checkpointMap.size()) {
+		// CheckpointList size
+		if(this.checkpointList.size() != result.checkpointList.size()) {
 			return false;
 		}
 		
-		// Compare checkpointMap's keys (Checkpoint id)
-		if (!compareKeys(result)) {
-			return false;
-		}
-		
-		// Compare checkpointMap's values (Checkpoints)
-		if (!compareValues(result)) {
+		// Compare Checkpoints
+		if (!compareCheckpoints(result)) {
 			return false;
 		}
 		
@@ -138,8 +112,8 @@ public class Result {
 	 * Returns result's Checkpoint map.
 	 * @return HashMap of checkpoints and identifiers
 	 */
-	public HashMap<Integer,Checkpoint> getCheckpointMap() {
-		return checkpointMap;
+	public LinkedList<Checkpoint> getCheckpointList() {
+		return checkpointList;
 	}
 	
 	/**

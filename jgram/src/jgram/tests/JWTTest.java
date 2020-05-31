@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.util.ArrayList;
-
 import org.junit.jupiter.api.Test;
 
 import jgram.assessment.Comment;
@@ -15,6 +13,8 @@ import jgram.exceptions.InvalidCheckpointException;
 import jgram.exceptions.InvalidCommentException;
 import jgram.exceptions.InvalidGradeMappingException;
 import jgram.security.JWT;
+import jgram.security.Secret;
+import jgram.utilities.LinkedList;
 
 class JWTTest {
 	
@@ -40,7 +40,7 @@ class JWTTest {
 				+ "keyword to exit the for loop once the element is found.])");
 		Comment comment4 = new Comment("3", "Nikki Tebaldi", "GRADEMAPPING(A+=97, "
 				+ "A=95, A-=93, B+=87, B=85, B-=83, C=77, F=67)");
-		ArrayList<Comment> documentComments = new ArrayList<>();
+		LinkedList<Comment> documentComments = new LinkedList<>();
 		documentComments.add(comment1);
 		documentComments.add(comment2);
 		documentComments.add(comment3);
@@ -60,8 +60,9 @@ class JWTTest {
 			document1.calculateResult();
 		
 			// Create a new JWT object to encode document1
-			JWT jwt = new JWT("secret");
-			jwt.encode("1", "BU-MET", "JRAM", document1);
+			Secret secret = new Secret("secret");
+			JWT jwt = new JWT(secret);
+			jwt.encode(document1);
 			
 			// Create a new document for comparison and set its hash string to
 			// document1's hash string
@@ -69,7 +70,7 @@ class JWTTest {
 			document2.setHashString(document1.getHashString());
 			
 			// Create a new JWT object and decode document2
-			JWT jwt2 = new JWT("secret");
+			JWT jwt2 = new JWT(secret);
 			jwt2.decode(document2);
 		
 			// Compare document1's encoded result with document2's decoded result

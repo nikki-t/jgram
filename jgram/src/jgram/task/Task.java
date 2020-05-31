@@ -1,14 +1,15 @@
 package jgram.task;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 import jgram.security.Secret;
+import jgram.utilities.LinkedList;
 
 /**
  * Intent: The Task class represents one of many tasks the JGRAM program can 
@@ -22,14 +23,16 @@ public abstract class Task {
 	
 	// Instance variable(s)
 	private Secret secret;
-	private ArrayList<Path> fileList;
+	private LinkedList<Path> fileList;
 
 	// Constructor(s)
-	public Task() {}
+	public Task() {
+		fileList = new LinkedList<>();
+	}
 	
 	public Task(String userSecret) {
 		secret = new Secret(userSecret);
-		fileList = new ArrayList<>();
+		fileList = new LinkedList<>();
 	}
 	
 	/**
@@ -61,6 +64,11 @@ public abstract class Task {
 			if (taskType.equals("tamper")) {
 				// Get 'GRADED' directory
 				path = Paths.get(path.toString(), "GRADED");
+				// Determine if assignments have been graded
+				if (!(Files.isDirectory(path))) {
+					throw new FileNotFoundException("\nAssignments have not "
+							+ "been graded. Please grade assignments first.");
+				}
 			}
 			
 			// Post2 Directory contents
@@ -122,7 +130,8 @@ public abstract class Task {
 		while (notADirectory && keepGoing) {
 								
 			System.out.println("\nPlease enter a directory that contains Word "
-					+ "documents:");
+					+ "documents."
+					+ "\n\t(Example: /Users/username/Documents/Assignments/):");
 			String input = keyboard.nextLine();
 			
 			// Convert input into a path
@@ -151,7 +160,7 @@ public abstract class Task {
 		
 	}
 	
-	public ArrayList<Path> getFileList() {
+	public LinkedList<Path> getFileList() {
 		return fileList;
 	}
 	
@@ -167,7 +176,7 @@ public abstract class Task {
 	 */
 	abstract public void performTask();
 	
-	public void setFileList(ArrayList<Path> paths) {
+	public void setFileList(LinkedList<Path> paths) {
 		fileList = paths;
 	}
 	

@@ -109,12 +109,26 @@ public class EvaluationTask extends Task {
 		
 		// Post1 Comments
 		document.parseComments();
+		// Test for presence of comments
+		if (document.getCommentList().isEmpty()) {
+			throw new InvalidCommentException("\nERROR: No comments were found "
+					+ "in file");
+		}
 		
 		// Post2 Grade mapping
 		document.parseGradeMapping();
+		// Set default grade mapping if one is not provided in the comments
+		if (document.getGradeMapping().getLimits().isEmpty()) {
+			document.setDefaultGradeMapping();
+		}
 		
 		// Post3 Checkpoints
 		document.parseCheckpoints();
+		// Test for presence of checkpoints
+		if (document.getCheckpointList().isEmpty()) {
+			String message = "\nERROR: No checkpoints detected in file";
+			throw new InvalidCommentException(message);
+		}
 		
 	}
 	
@@ -170,8 +184,7 @@ public class EvaluationTask extends Task {
 				
 					// Post5 Create hash string
 					Secret secret = getSecret();
-					document.createHashString(secret.getID(), secret.getIssuer(), 
-							secret.getSubject(), secret.getSecret());
+					document.createHashString(secret);
 					
 					// Post6 Create graded assignment
 					document.createGradedAssignment();

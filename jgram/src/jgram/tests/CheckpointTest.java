@@ -21,8 +21,8 @@ class CheckpointTest {
 	void testEquals() {
 		
 		try {
-			Checkpoint checkpoint1 = new Checkpoint(3, 85, "Great Job.");
-			Checkpoint checkpoint2 = new Checkpoint(3, 85, "Great Job.");
+			Checkpoint checkpoint1 = new Checkpoint(3, 85, "Great Job.", 1);
+			Checkpoint checkpoint2 = new Checkpoint(3, 85, "Great Job.", 1);
 			assertTrue(checkpoint1.equals(checkpoint2));
 		} catch (InvalidCheckpointException e) {
 			fail("Invalid checkpoints created.");
@@ -39,7 +39,7 @@ class CheckpointTest {
 		
 		assertThrows(InvalidCheckpointException.class, () -> {
 			@SuppressWarnings("unused")
-			Checkpoint checkpoint = new Checkpoint(3, 101, "Great Job.");
+			Checkpoint checkpoint = new Checkpoint(3, 101, "Great Job.", 1);
 		});
 		
 	}
@@ -52,8 +52,8 @@ class CheckpointTest {
 	void testNotEquals() {
 		
 		try {
-			Checkpoint checkpoint1 = new Checkpoint(3, 85, "Great Job.");
-			Checkpoint checkpoint2 = new Checkpoint(3, 90, "Great Job.");
+			Checkpoint checkpoint1 = new Checkpoint(3, 85, "Great Job.", 1);
+			Checkpoint checkpoint2 = new Checkpoint(3, 90, "Great Job.", 1);
 			assertFalse(checkpoint1.equals(checkpoint2));
 		} catch (InvalidCheckpointException e) {
 			fail("Invalid checkpoints created.");
@@ -68,8 +68,8 @@ class CheckpointTest {
 	void testToString() {
 		
 		try {
-			Checkpoint checkpoint = new Checkpoint(3, 85, "Great Job.");
-			assertEquals("Weight: 3, Grade: 85, Feedback: Great Job.", 
+			Checkpoint checkpoint = new Checkpoint(3, 85, "Great Job.", 1);
+			assertEquals("Weight: 3, Grade: 85, Feedback: Great Job., ID: 1", 
 				checkpoint.toString());
 		} catch (InvalidCheckpointException e) {
 			fail("Invalid checkpoints created.");
