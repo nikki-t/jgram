@@ -25,64 +25,70 @@ you would like to run
 
 ## File List
 ```
-.
-├── README.md
-└── jgram
-    ├── README-A3.txt
-    ├── pom.xml
-    └── src
-        └── jgram
-            ├── MainJGRAM.java
-            ├── assessment
-            │   ├── Checkpoint.java
-            │   ├── Comment.java
-            │   ├── Document.java
-            │   ├── Evaluator.java
-            │   ├── GradeMapping.java
-            │   ├── JustInTimeEvaluator.java
-            │   └── Result.java
-            ├── exceptions
-            │   ├── InvalidCheckpointException.java
-            │   ├── InvalidCommentException.java
-            │   ├── InvalidGradeMappingException.java
-            │   └── InvalidTableException.java
-            ├── security
-            │   ├── JWT.java
-            │   └── Secret.java
-            ├── task
-            │   ├── EvaluationTask.java
-            │   ├── NewDocumentTask.java
-            │   ├── TamperTestTask.java
-            │   └── Task.java
-            ├── tests
-            │   ├── CheckpointTest.java
-            │   ├── CommentTest.java
-            │   ├── DocumentTest.java
-            │   ├── EvaluationTaskTest.java
-            │   ├── GradeMappingTest.java
-            │   ├── JWTTest.java
-            │   ├── JustInTimeEvaluatorTest.java
-            │   ├── LinkedListTest.java
-            │   ├── NewDocumentTaskTest.java
-            │   ├── ResultTest.java
-            │   ├── TamperTaskTest.java
-            │   ├── TaskTest.java
-            │   ├── TestUtilities.java
-            │   └── resources
-            │       ├── GRADED
-            │       │   ├── GRADED_document-test.docx
-            │       │   ├── GRADED_eval-task-test.docx
-            │       │   ├── GRADED_tamper-task-test.docx
-            │       │   └── report.txt
-            │       ├── document-test.docx
-            │       ├── eval-task-test.docx
-            │       ├── new-doc-test-invalid.docx
-            │       ├── new-doc-test-valid.docx
-            │       ├── report.txt
-            │       └── tamper-task-test.docx
-            └── utilities
-                ├── LinkedList.java
-                └── Validation.java
+    ├── README.md
+    └── jgram
+        ├── README-A4.txt
+        ├── pom.xml
+        └── src
+            └── jgram
+                ├── MainJGRAM.java
+                ├── assessment
+                │   ├── Checkpoint.java
+                │   ├── Comment.java
+                │   ├── Document.java
+                │   ├── Evaluator.java
+                │   ├── GradeMapping.java
+                │   ├── JustInTimeEvaluator.java
+                │   └── Result.java
+                ├── exceptions
+                │   ├── InvalidCheckpointException.java
+                │   ├── InvalidCommentException.java
+                │   ├── InvalidGradeMappingException.java
+                │   └── InvalidRecordException.java
+                ├── security
+                │   ├── JWT.java
+                │   └── Secret.java
+                ├── storage
+                │   ├── Record.java
+                │   └── RecordManager.java
+                ├── task
+                │   ├── EvaluationTask.java
+                │   ├── NewDocumentTask.java
+                │   ├── TamperTestTask.java
+                │   └── Task.java
+                ├── tests
+                │   ├── CheckpointTest.java
+                │   ├── CommentTest.java
+                │   ├── DocumentTest.java
+                │   ├── EvaluationTaskTest.java
+                │   ├── GradeMappingTest.java
+                │   ├── JWTTest.java
+                │   ├── JustInTimeEvaluatorTest.java
+                │   ├── NewDocumentTaskTest.java
+                │   ├── RecordManagerTest.java
+                │   ├── RecordTest.java
+                │   ├── ResultTest.java
+                │   ├── TamperTaskTest.java
+                │   ├── TaskTest.java
+                │   ├── TestUtilities.java
+                │   └── resources
+                │       ├── GRADED
+                │       │   ├── GRADED
+                │       │   │   ├── GRADED_GRADED_tamper-task-test.docx
+                │       │   │   └── jgram.dat
+                │       │   ├── GRADED_document-test.docx
+                │       │   ├── GRADED_eval-task-test.docx
+                │       │   ├── GRADED_tamper-task-test.docx
+                │       │   ├── jgram.dat
+                │       │   └── report.txt
+                │       ├── document-test.docx
+                │       ├── eval-task-test.docx
+                │       ├── jgram.dat
+                │       ├── new-doc-test-invalid.docx
+                │       ├── new-doc-test-valid.docx
+                │       └── tamper-task-test.docx
+                └── utilities
+                    └── Validation.java
 ```
 ## Test
 JUnit tests are located jgram/src/jgram/tests 
