@@ -3,13 +3,15 @@ package jgram.tests;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import jgram.assessment.Checkpoint;
 import jgram.assessment.JustInTimeEvaluator;
 import jgram.assessment.Result;
 import jgram.exceptions.InvalidCheckpointException;
-import jgram.utilities.LinkedList;
 
 class ResultTest {
 	
@@ -23,7 +25,7 @@ class ResultTest {
 		try {
 		
 			// Create a list of checkpoints
-			LinkedList<Checkpoint> checkpointList1 = new LinkedList<>();
+			List<Checkpoint> checkpointList1 = new ArrayList<>();
 			checkpointList1.add(new Checkpoint(3, 85, "Okay Job.", 1));
 			checkpointList1.add(new Checkpoint(3, 100, "Excellent Job.", 2));
 			checkpointList1.add(new Checkpoint(4, 90, "Good Job.", 3));
@@ -31,7 +33,7 @@ class ResultTest {
 			Result result1 = jitEval1.evaluate();
 			
 			// Create a second list of checkpoints
-			LinkedList<Checkpoint> checkpointList2 = new LinkedList<>();
+			List<Checkpoint> checkpointList2 = new ArrayList<>();
 			checkpointList2.add(new Checkpoint(3, 85, "Okay Job.", 1));
 			checkpointList2.add(new Checkpoint(3, 100, "Excellent Job.", 2));
 			checkpointList2.add(new Checkpoint(4, 90, "Good Job.", 3));

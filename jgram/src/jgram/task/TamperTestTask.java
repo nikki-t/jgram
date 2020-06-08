@@ -13,8 +13,10 @@ import jgram.assessment.Result;
 import jgram.exceptions.InvalidCheckpointException;
 import jgram.exceptions.InvalidCommentException;
 import jgram.exceptions.InvalidGradeMappingException;
-import jgram.exceptions.InvalidTableException;
+import jgram.exceptions.InvalidRecordException;
+import jgram.security.JWT;
 import jgram.security.Secret;
+import jgram.storage.RecordManager;
 
 /**
  * Intent: Determine if a previously graded assignment has been modified.
@@ -34,6 +36,7 @@ public class TamperTestTask extends Task {
 	Document currentDocument;
 	String reportFilename;
 	PrintWriter outStream;
+	RecordManager recordManager;
 	
 	// Constructor(s)
 	public TamperTestTask() {
@@ -103,9 +106,40 @@ public class TamperTestTask extends Task {
 		}
 		
 		// Create PrintWriter
-		Path firstFile = getFileList().first();
+		Path firstFile = getFileList().get(0);
 		reportFilename = getReportFilename(firstFile);
 		outStream = new PrintWriter(reportFilename);
+	}
+	
+	/**
+	 * Intent: Create a list of previously saved records.
+	 * 
+	 * Postcondition1 (RecordManager): A RecordManager object is created from
+	 * the current working directory.
+	 * Postcondition2 (Input stream): An ObjectInputStream object is created
+	 * in order to read data from the previously saved file.
+	 * Postcondition3 (Record list): A list of records is created from the 
+	 * previously saved file.
+	 * 
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	private void createRecordManager() throws FileNotFoundException, IOException,
+			ClassNotFoundException {
+		
+		// Post1 RecordManager
+		recordManager = new RecordManager(getWorkingDirectory());
+		
+		// Post2 Input stream
+		recordManager.createInputStream();
+		
+		// Post3 Record list
+		recordManager.createRecordListFromFile();
+		
+		// Close open resources
+		recordManager.getInputStream().close();
+		
 	}
 	
 	/**
@@ -165,9 +199,11 @@ public class TamperTestTask extends Task {
 	 * 
 	 * Postcondition1 (PrintWriter creation): PrintWriter object has been 
 	 * created for writing or appending to report.txt.
-	 * Postcondition2 (Document loop): All documents in a directory have been
+	 * Postcondition2 (RecordManager creation): RecordManager object is 
+	 * created and a list of records is retrieved.
+	 * Postcondition3 (Document loop): All documents in a directory have been
 	 * iterated on and the task operations have been executed if applicable. 
-	 * Postcondition3 (Handle exceptions): Exceptions are reported to the 
+	 * Postcondition4 (Handle exceptions): Exceptions are reported to the 
 	 * console and control returns to the caller.
 	 */
 	@Override
@@ -179,46 +215,27 @@ public class TamperTestTask extends Task {
 			
 			// Post1 PrintWriter creation
 			createPrintWriter();
+			
+			// Post2 RecordManager creation
+			createRecordManager();
 						
-			// Post2 Document Loop
+			// Post3 Document Loop
 			for (Path path : getFileList()) {
 				
-				try {
-					
 					tamperTestPath(secret, path);
-				
-				// Post3 Handle exceptions from try to work with specific files
-				} catch (FileNotFoundException e) {
-					// generated from writeReport
-					String error = "\nERROR: Could not locate file to write "
-							+ "report for:  ";
-					displayException(error);
-				
-				} catch (InvalidTableException 
-						| InvalidCheckpointException 
-						| InvalidGradeMappingException 
-						| InvalidCommentException e) {
-					// getHashStringFromFile (previously graded file)
-					String error = e.getMessage() + "\n\tDetected in retrieval "
-							+ "of file: ";
-					displayException(error);
-					System.out.println("\n\tCould not generate report for file.");
-				
-				} catch (MalformedJwtException e) {
-					// JWT
-					String error = "ERROR: Previous result has been corrupted. "
-							+ "\n\tPlease re-grade original assignment: ";
-					displayException(error);
-				
-				}
 			}
 			
 			System.out.println("\nReport written to: " + reportFilename);
 		
-		// Post3 Handle exceptions generated from try to work with directory
+		// Post4 Handle exceptions generated from try to work with directory
 		} catch (FileNotFoundException e) {
-			// exceptions from createPrintWriter
-			System.out.println(e.getMessage());
+			// exceptions from createPrintWriter and ObjectInputStream
+			System.out.println("\nError: " + e.getMessage());
+			
+		} catch (ClassNotFoundException e) {
+			// generated from RecordManager.createInputStream
+			System.out.println("\nError: Could not locate record of previously"
+					+ "saved results.\n\tPlease re-grade assignment(s).");
 			
 		} catch (IOException e) {
 			// Directory stream, File input stream, Files copy, getHashStringFromFile
@@ -281,18 +298,50 @@ public class TamperTestTask extends Task {
 	/**
 	 * Intent: Retrieve previous document grading result data.
 	 * 
+	 * Postcondition1 (Previous document creation): A Document object is created
+	 * to represent the results from a previously grading attempt.
+	 * Postcondition2 (Extract file name): The previously graded filename is 
+	 * located and the filename is stored as a String.
+	 * Postcondition4 (Hash string): The hash string is extracted from the 
+	 * record and stored in the previous Document object.
+	 * Postcondition5 (Decode hash string): The hash string stored in the 
+	 * previous Document object is decoded and used to populate data fields
+	 * of Document object.
+	 *  
 	 * @param secret
 	 * @param path
-	 * @return
+	 *
 	 * @throws InvalidCheckpointException
 	 * @throws InvalidGradeMappingException 
+	 * @throws ClassNotFoundException 
+	 * @throws InvalidRecordException 
 	 */
 	private void retrievePreviousDocument(Secret secret, Path path) 
-			throws IOException, InvalidTableException, 
-			InvalidCheckpointException, InvalidGradeMappingException {
+			throws IOException, InvalidCheckpointException, 
+			InvalidGradeMappingException, ClassNotFoundException, 
+			InvalidRecordException {
 		
+		// Post1 Previous document creation
 		previousDocument = new Document(path);
-		previousDocument.retrieveResult(secret);
+		
+		// Post2 Extract file name
+		int index = path.getNameCount();
+		String assignmentName = path
+				.getName(index - 1)
+				.toString();
+		
+		// Post3 Retrieve hash string
+		String hashString = recordManager
+				.retrieveRecord(assignmentName)
+				.getHashString();
+		if (hashString.equals("")) {
+			throw new InvalidRecordException("Could not find record.");
+		}
+		previousDocument.setHashString(hashString);	
+		
+		// Post4 Decode hash string
+		JWT jwt = new JWT(secret);
+		jwt.decode(previousDocument);
 
 		
 	}
@@ -310,37 +359,68 @@ public class TamperTestTask extends Task {
 	 * are compared.
 	 * Postcondition4 (Report): A report is written to a file in the 'GRADED'
 	 * sub-directory called 'report.txt'.
+	 * Postcondition5 (Handle exceptions for specific files): Exceptions have 
+	 * been handled that are generated by specific files and where processing
+	 * of files can continue.
 	 * 
 	 * @param secret
 	 * @param path
+	 * 
 	 * @throws IOException
-	 * @throws InvalidTableException
 	 * @throws InvalidCheckpointException
 	 * @throws InvalidGradeMappingException
 	 * @throws InvalidCommentException
+	 * @throws ClassNotFoundException 
+	 * @throws InvalidRecordException 
 	 */
-	private void tamperTestPath(Secret secret, Path path) throws IOException, 
-			InvalidTableException, InvalidCheckpointException, 
-			InvalidGradeMappingException, InvalidCommentException {
+	private void tamperTestPath(Secret secret, Path path) throws 
+			ClassNotFoundException, IOException {
 		
-		// Post1 Previous result
-		retrievePreviousDocument(secret, path);
+		try {
 		
-		// Post2 Current result
-		retrieveCurrentDocument(secret, path);
+			// Post1 Previous result
+			retrievePreviousDocument(secret, path);
+			
+			// Post2 Current result
+			retrieveCurrentDocument(secret, path);
+			
+			// Post3 Comparison of results
+			
+			// GradeMapping
+			boolean isGradeMapEqual = compareGradeMaps();
+			
+			// Result
+			boolean isResultEqual = compareResults();
+			
+			// Post4 Report
+			writeReport(isGradeMapEqual, isResultEqual, path);
+			
+			System.out.println("\nTAMPER TESTED: " + path.getFileName());
 		
-		// Post3 Comparison of results
+		// Post5 Handle exceptions for specific files
+		} catch (FileNotFoundException e) {
+			// generated from writeReport
+			String error = "\nERROR: Could not locate file to write "
+					+ "report for:  ";
+			displayException(error);
 		
-		// GradeMapping
-		boolean isGradeMapEqual = compareGradeMaps();
+		} catch (InvalidRecordException 
+				| InvalidCheckpointException 
+				| InvalidGradeMappingException 
+				| InvalidCommentException e) {
+			// getHashStringFromFile (previously graded file)
+			String error = e.getMessage() + "\n\tDetected in retrieval "
+					+ "of file: ";
+			displayException(error);
+			System.out.println("\n\tCould not generate report for file.");
 		
-		// Result
-		boolean isResultEqual = compareResults();
+		} catch (MalformedJwtException e) {
+			// JWT
+			String error = "ERROR: Previous result has been corrupted. "
+					+ "\n\tPlease re-grade original assignment: ";
+			displayException(error);
 		
-		// Post4 Report
-		writeReport(isGradeMapEqual, isResultEqual, path);
-		
-		System.out.println("\nTAMPER TESTED: " + path.getFileName());
+		}
 	}
 	
 	/**
@@ -384,7 +464,7 @@ public class TamperTestTask extends Task {
 		
 		// Results - checkpoints and total grade
 		if (!isResultEqual) {
-			status += "\n\tFAILED results comparison";
+			status += "\n\tFAILED checkpoint comparison";
 			resultTable = "Previous Result Table: \n"
 				+ previousDocument.getResultTableString()
 				+ "\nCurrent Result Table: \n"

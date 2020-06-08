@@ -8,13 +8,33 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
 
+import jgram.task.EvaluationTask;
 import jgram.task.TamperTestTask;
 import jgram.task.Task;
 
 public class TamperTaskTest {
+	
+	/**
+	 * Intent: To run EvaluationTask in order to generate expected jgram.dat
+	 * file.
+	 */
+	private void runEvalTask() {
+		// Run evaluation task to generate proper dat file
+		Path evalDocument = TestUtilities
+				.returnAssignmentPath("tamper-task-test.docx");
+		
+		// Run performTask method
+		Task evalTask = new EvaluationTask();
+		try {
+			TestUtilities.runPerformTask(evalTask, evalDocument, "evaluation");
+		} catch (IOException e) {
+			fail("Failed to mock Task.createFileList method.");
+		}
+	}
 	
 	/**
 	 * Intent: Test TamperTaskTest.performTask method. Asserts that output of
@@ -24,23 +44,31 @@ public class TamperTaskTest {
 	@Test
 	void testPerformTask() {
 		
-		// Locate test assignment file
-		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("tamper-task-test.docx");
+		// Run evaluation task to generate proper dat file
+		runEvalTask();
 		
-		// Run performTask
-		Task task = new TamperTestTask();
+		// Locate graded test assignment file
+		Path resourceDocument = TestUtilities
+				.returnAssignmentPath("/GRADED/GRADED_tamper-task-test.docx");
+		
+		// Run performTask method
+		Task tamperTask = new TamperTestTask();
 		try {
-			TestUtilities.runPerformTask(task, resourceDocument, "tamper");
+			TestUtilities.runPerformTask(tamperTask, resourceDocument, "tamper");
 		} catch (IOException e) {
 			fail("Failed to mock Task.createFileList method.");
 		}
+		
+		// Assert dat file exists
+		Path datPath = Paths.get(resourceDocument.getParent().toString(), "jgram.dat");
+		File datFile = datPath.toFile();
+		assertTrue(datFile.exists());
 		
 		// Assert 'report.txt' exists
 		String reportFileString = resourceDocument
 				.getParent()
 				.toString() 
-				+ "/GRADED/report.txt";
+				+ "/report.txt";
 		File reportFile = new File(reportFileString);
 		
 		assertTrue(reportFile.exists());
@@ -53,7 +81,7 @@ public class TamperTaskTest {
 			String report = new String(encoded, StandardCharsets.UTF_8);
 			
 			// Assert key report sections exist in report.txt
-			assertTrue(report.contains("\nFilename: tamper-task-test.docx\n"));
+			assertTrue(report.contains("\nFilename: GRADED_tamper-task-test.docx\n"));
 			assertTrue(report.contains("\nTamper Status: \n\tPASSED"));
 			assertTrue(report.contains("\nGrade Mapping: \n"));
 			assertTrue(report.contains("\nResult Table: \n"));

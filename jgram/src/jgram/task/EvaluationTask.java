@@ -1,11 +1,13 @@
 package jgram.task;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 
 import jgram.assessment.Document;
 import jgram.exceptions.InvalidCommentException;
 import jgram.security.Secret;
+import jgram.storage.RecordManager;
 
 /**
  * Intent: Calculate and output the grade for an assignment.
@@ -25,6 +27,8 @@ public class EvaluationTask extends Task {
 	
 	// Instance variable(s)
 	Document document;
+	RecordManager recordManager;
+	int recordID = 0;
 	
 	// Constructor(s)
 	public EvaluationTask() {
@@ -95,6 +99,58 @@ public class EvaluationTask extends Task {
 	}
 	
 	/**
+	 * Intent: Evaluate one assignment document by grading available data
+	 * present in the document's comments, encoding the result as a hash
+	 * string and writing the hash string to a file.
+	 * 
+	 * Postcondition1 (Document): A new Document object is created that needs 
+	 * to be graded.
+	 * Postcondition2 (Parse document): Document is parsed for grading data.
+	 * Postcondition3 (Evaluate assignment): Document is evaluated and total
+	 * grade is calculated.
+	 * Postcondition4 (Create graded assignment): A copy of the assignment is 
+	 * created and the results of the graded assignment are appended to the
+	 * end of the assignment copy.
+	 * Postcondition5 (Hash string): An encoded hash string is created
+	 * from the result and stored in a file named 'jgram.dat'.
+	 * Postcondition6 (Handle exceptions): Exceptions are reported to the 
+	 * console and control returns to caller.
+	 * 
+	 * @param path
+	 * 
+	 * @throws IOException
+	 */
+	private void evaluateAssignment(Path path) throws IOException {
+		
+		try {
+			// Post1 Document
+			document = new Document(path);
+			
+			// Post2 Parse document
+			parseDocument(document);
+			
+			// Post3 Evaluate assignment
+			document.calculateResult();
+						
+			// Post4 Create graded assignment
+			document.createGradedAssignment();
+			
+			// Post5 Hash string
+			storeHashString(document);
+			
+			System.out.println("\nGraded Document: " 
+					+ path.getFileName());
+
+		
+		// Post6 Handle exceptions
+		} catch (InvalidCommentException e) {
+			
+			displayInvalidCommentException(e);
+					
+		}
+	}
+	
+	/**
 	 * Intent: Parse document for comments, checkpoints, and a grade mapping.
 	 * 
 	 * Postcondition1 (Comments): Comments are extracted from document.
@@ -137,17 +193,12 @@ public class EvaluationTask extends Task {
 	 * 
 	 * Postcondition1 (Document loop): All documents in a directory have been
 	 * iterated on and the task operations have been executed if applicable.
-	 * Postcondition2 (Document): A new Document object is created that needs 
-	 * to be graded.
-	 * Postcondition3 (Parse document): Document is parsed for grading data.
-	 * Postcondition4 (Evaluate assignment): Document is evaluated and total
-	 * grade is calculated.
-	 * Postcondition5 (Create hash string): An encoded hash string is created
-	 * from the result.
-	 * Postcondition6 (Create graded assignment): A copy of the assignment is 
-	 * created and the results of the graded assignment are appended to the
-	 * end of the assignment copy.
-	 * Postcondition7 (Handle exceptions): Exceptions are reported to the 
+	 * Postcondition2 (Record Manager): A RecordManager object has been created
+	 * and an output stream has been set to write the record to.
+	 * Postcondition3 (Evaluate each document): Each document is evaluated and a
+	 * grade is calculated and a hash string of encoded results has been created
+	 * and stored.
+	 * Postcondition4 (Handle exceptions): Exceptions are reported to the 
 	 * console and control returns to caller.
 	 */
 	@Override
@@ -168,50 +219,74 @@ public class EvaluationTask extends Task {
 				System.out.println("\n\tExiting to main menu...");
 				return;
 			}
+			
+			// Post2 RecordManager
+			recordManager = new RecordManager(getWorkingDirectory());
+			recordManager.createOutputStream();
 		
 			for (Path path : getFileList()) {
+					
+				// PostCondition2 Evaluate each document
+				evaluateAssignment(path);
 				
-				try {
-			
-					// Post2 Document
-					document = new Document(path);
-					
-					// Post3 Parse document
-					parseDocument(document);
-					
-					// Post4 Evaluate assignment
-					document.calculateResult();
-				
-					// Post5 Create hash string
-					Secret secret = getSecret();
-					document.createHashString(secret);
-					
-					// Post6 Create graded assignment
-					document.createGradedAssignment();
-					
-					System.out.println("\nGraded Document: " 
-							+ path.getFileName());
-				
-				// Post7 Handle exceptions
-				} catch (InvalidCommentException e) {
-					
-					displayInvalidCommentException(e);
-							
-				}
-			
-			} // End for
+			} 
 			
 			System.out.println("\nFINISHED GRADING. Check 'GRADED' directory "
 					+ "for graded assignments.");
+			
+			// Close object output stream
+			recordManager.getOutputStream().close();
 		
 		// Post7 Handle exceptions
+		} catch (FileNotFoundException e) {
+			// ObjectOutputStream
+			System.out.println("\nERROR: " + e.getMessage());
+			
 		} catch (IOException e) {
 			
 			// Directory stream, File input stream, Files copy, deleteDirectory
 			System.out.println("\nERROR: Could not process files in directory "
 					+ "entered.");
+			System.out.println(e.getMessage());
+		
 		}
 			
+	}
+	
+	/**
+	 * Intent: Create and store a hash string for tamper detection.
+	 * 
+	 * Postcondition1 (Create hash string): A hash string is created that 
+	 * encodes all of the grading result data contained in a document.
+	 * Postcondition2 (Record data): All data needed to create a record
+	 * is retrieved.
+	 * Postcondition3 (Record written): A Record object is created and a record
+	 * is written to 'jgram.dat'.
+	 * 
+	 * @param document
+	 * @throws IOException 
+	 */
+	private void storeHashString(Document document) throws IOException {
+		
+		// Post1 Create hash string
+		Secret secret = getSecret();
+		document.createHashString(secret);
+		
+		//  Post2 Record data
+		// Assignment Name
+		Path assignmentPath = document.getAssignmentName();
+		int index = assignmentPath.getNameCount();
+		String assignmentName = "GRADED_" + assignmentPath
+				.getName(index - 1)
+				.toString();
+		
+		// Record ID
+		recordID++;
+		
+		// Post3 Record written
+		recordManager.writeRecord(recordID, assignmentName, 
+				document.getHashString());
+		
 	}
 
 }

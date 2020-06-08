@@ -1,6 +1,7 @@
 package jgram.assessment;
 
-import jgram.utilities.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Intent: Represent the result of grading an assignment including a
@@ -17,15 +18,20 @@ public class Result {
 	
 	// Instance variable(s)
 	private float totalGrade;
-	private LinkedList<Checkpoint> checkpointList;
+	private List<Checkpoint> checkpointList;
 	
 	// Constructor(s)
 	public Result() {
-		checkpointList = new LinkedList<>();
+		checkpointList = new ArrayList<>();
 	}
 	
-	public Result(LinkedList<Checkpoint> cList) {
+	public Result(List<Checkpoint> cList) {
 		checkpointList = cList;
+	}
+	
+	public Result(List<Checkpoint> cList, float tGrade) {
+		checkpointList = cList;
+		totalGrade = tGrade;
 	}
 	
 	/**
@@ -46,15 +52,11 @@ public class Result {
 		
 		boolean isEqual = true;
 		
-		// Convert both result list's to arrays
-		Checkpoint[] thisCheckpointArray = this.checkpointList.toArray();
-		Checkpoint[] otherCheckpointArray = result.checkpointList.toArray();
-		
 		// Compare each Checkpoint in the list
-		for (int i = 0; i < thisCheckpointArray.length; i++) {
+		for (int i = 0; i < this.checkpointList.size(); i++) {
 			
-			Checkpoint thisCheckpoint = thisCheckpointArray[i];
-			Checkpoint paramCheckpoint = otherCheckpointArray[i];
+			Checkpoint thisCheckpoint = this.checkpointList.get(i);
+			Checkpoint paramCheckpoint = result.checkpointList.get(i);
 			
 			if (!(thisCheckpoint.equals(paramCheckpoint))) {
 				isEqual = false;
@@ -112,7 +114,7 @@ public class Result {
 	 * Returns result's Checkpoint map.
 	 * @return HashMap of checkpoints and identifiers
 	 */
-	public LinkedList<Checkpoint> getCheckpointList() {
+	public List<Checkpoint> getCheckpointList() {
 		return checkpointList;
 	}
 	

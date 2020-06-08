@@ -50,10 +50,10 @@ public class TaskTest {
 		
 		// Assert first item in the list
 		// Extract name
-		int nameCount = task.getFileList().first().getNameCount();
+		int nameCount = task.getFileList().get(0).getNameCount();
 		String name = task
 				.getFileList()
-				.first()
+				.get(0)
 				.getName(nameCount - 1)
 				.toString();
 		assertEquals("document-test.docx", name);		
@@ -83,7 +83,10 @@ public class TaskTest {
 		
 		// Run getDirectory method
 		Scanner keyboard = new Scanner(System.in);
-		Path path = task.getDirectory(keyboard);
+		task.getDirectory(keyboard);
+		
+		// Store reference to directory obtained
+		Path path = task.getWorkingDirectory();
 		
 		// Assert returned directory
 		File pathFile = path.toFile();

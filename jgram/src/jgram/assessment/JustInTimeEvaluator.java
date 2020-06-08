@@ -1,6 +1,8 @@
 package jgram.assessment;
 
-import jgram.utilities.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Intent: Represents an evaluator that evaluates assignment grades based on
@@ -13,43 +15,66 @@ import jgram.utilities.LinkedList;
 public class JustInTimeEvaluator implements Evaluator {
 	
 	// Instance variable(s)
-	private final LinkedList<Checkpoint> checkpointList;
+	private final List<Checkpoint> checkpointList;
 	
 	// Constructor(s)
-	public JustInTimeEvaluator(LinkedList<Checkpoint> cList) {
+	public JustInTimeEvaluator(List<Checkpoint> cList) {
 		checkpointList = cList;
 	}
 	
 	/**
-	 * Calculates the total grade based on the checkpoint list that contains
-	 * a list of grades and weights. Creates a result object to store the 
-	 * checkpoint list and total grade.
+	 * Intent: Calculates the total grade based on the checkpoint list that 
+	 * contains a list of grades and weights. Creates a result object to store 
+	 * the  checkpoint list and total grade.
+	 * 
+	 * Postcondition1 (Function interface object): A Function interface object
+	 * is created that takes a Checkpoint argument and returns an Integer
+	 * result.
+	 * Postcondition2 (Sum the product of checkpoint grade and weight):
+	 * The sum of the product of all checkpoint's grade and weight instance 
+	 * variables is calculated.
+	 * Postcondition3 (Sum checkpoint grade weights): The sum of all checkpoint
+	 * grade weights is calculated.
+	 * Postcondition4 (Determine total grade): The total grade for the 
+	 * assignment is calculated.
+	 * Postcondition5 (Result): A Result object is created with a list of 
+	 * Checkpoint objects and a total grade.
 	 * 
 	 * @return Result object
 	 */
 	@Override
 	public Result evaluate() {
 		
-		Result result = new Result(checkpointList);
+		// Post1 Function interface object
+		Function<Checkpoint, Integer> gradeWeightProduct = checkpoint -> 
+				checkpoint.getGrade() * checkpoint.getWeight();
 		
-		// Store the total sum of grades * weights and the sum of weights
-		float sumGradeWeights = 0;
-		int sumWeights = 0;
+		// Post2 Sum the product of checkpoint grade and weight
+		Optional<Integer> sumGradeWeights = checkpointList
+				.stream()
+				.map(gradeWeightProduct)
+				.reduce((x, y) -> x + y);
 		
-		// Loop through each checkpoint to calculate Result
-		for (Checkpoint checkpoint: checkpointList) {
-			
-			sumGradeWeights += checkpoint.getGrade() * checkpoint.getWeight();
-			sumWeights += checkpoint.getWeight();
-			
-			
+		int gradeWeights;
+		if (sumGradeWeights.isPresent()) {
+			gradeWeights = sumGradeWeights.get();
+		} else {
+			gradeWeights = -1;
 		}
 		
-		// Determine total grade for the assignment
-		float grade = sumGradeWeights / sumWeights;
-		result.setTotalGrade(grade);
+		// Post3 Sum checkpoint grade weights
+		int weights = checkpointList
+				.stream()
+				.mapToInt(c -> c.getWeight())
+				.sum();
 		
+		// Post4 Determine total grade for the assignment
+		float grade = gradeWeights / (float) weights;
+		
+		// Post5 Result
+		Result result = new Result(checkpointList, grade);
 		return result;
+
 		
 	}
 

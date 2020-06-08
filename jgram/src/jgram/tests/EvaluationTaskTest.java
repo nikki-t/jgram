@@ -65,6 +65,11 @@ public class EvaluationTaskTest {
 			
 			fail("Error retrieving result to test for table.");
 		}
+		
+		// Assert dat file exists
+		Path datPath = Paths.get(gradedPath.toString(), "jgram.dat");
+		File datFile = datPath.toFile();
+		assertTrue(datFile.exists());
 	}
 
 }

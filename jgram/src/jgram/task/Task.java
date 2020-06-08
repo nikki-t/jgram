@@ -2,14 +2,18 @@ package jgram.task;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jgram.security.Secret;
-import jgram.utilities.LinkedList;
 
 /**
  * Intent: The Task class represents one of many tasks the JGRAM program can 
@@ -23,16 +27,17 @@ public abstract class Task {
 	
 	// Instance variable(s)
 	private Secret secret;
-	private LinkedList<Path> fileList;
+	private List<Path> fileList;
+	private Path workingDirectory;
 
 	// Constructor(s)
 	public Task() {
-		fileList = new LinkedList<>();
+		fileList = new ArrayList<>();
 	}
 	
 	public Task(String userSecret) {
 		secret = new Secret(userSecret);
-		fileList = new LinkedList<>();
+		fileList = new ArrayList<>();
 	}
 	
 	/**
@@ -44,10 +49,15 @@ public abstract class Task {
 	 * 
 	 * Postcondition1 (Obtain directory path): A directory path is obtained 
 	 * from the user or a null value is returned if the user wishes to exit.
-	 * Postcondition2 (Directory contents): A list of the valid
-	 * directory contents is created.
-	 * Postcondition3 (Parsed list): The directory contents list is parsed 
-	 * for valid Word documents and stored in filesList.
+	 * Postcondition3 (Filter Predicate interface object): A Predicate interface
+	 * object is created for use with stream filter method and tests for
+	 * file names that end with ".docx".
+	 * Postcondition4 (Filter Predicate interface object): A Predicate interface
+	 * object is created for use with stream filter method and tests for
+	 * file names that start with "~".  
+	 * Postcondition4 (Create Path stream and store valid documents): A Path
+	 * stream is created and valid Path files are extracted from the stream
+	 * and stored in fileList.
 	 * 
 	 * @throws IOException
 	 */
@@ -55,46 +65,31 @@ public abstract class Task {
 		
 		// Post1 Obtain directory path
 		Scanner keyboard = new Scanner(System.in);
-		Path path = getDirectory(keyboard);
+		getDirectory(keyboard);
 		
 		// Valid path has been entered
-		if (path != null) {
+		if (workingDirectory != null) {
 			
 			// Test what directory path to obtain
-			if (taskType.equals("tamper")) {
-				// Get 'GRADED' directory
-				path = Paths.get(path.toString(), "GRADED");
-				// Determine if assignments have been graded
-				if (!(Files.isDirectory(path))) {
-					throw new FileNotFoundException("\nAssignments have not "
-							+ "been graded. Please grade assignments first.");
-				}
-			}
+			testTamperPath(taskType);
 			
-			// Post2 Directory contents
-			DirectoryStream<Path> directoryStream = 
-					Files.newDirectoryStream(path);
+			// Post2 Filter Predicate interface object
+			Predicate<Path> isDocx = (p -> {
+				String name = p.getName(p.getNameCount() - 1).toString();
+				return name.endsWith(".docx");
+			});
 			
-			// Post3 parsed list
-			for (Path p : directoryStream) {
-				
-				// Extract name
-				int nameCount = p.getNameCount();
-				Path name = p.getName(nameCount - 1);
-				
-				// Word document
-				if (name.toString().endsWith(".docx")) {
-					
-					// Ignore Word temp files
-					if (!(name.toString().startsWith("~"))) {
-						getFileList().add(p);
-					}
-					
-				}
-			} // End for
+			// Post3 Filter Predicate interface object
+			Predicate<Path> isNotHidden = (p -> {
+				String name = p.getName(p.getNameCount() - 1).toString();
+				return name.startsWith("~");
+			});
 			
-			// Close resource
-			directoryStream.close();
+			// Post4 Create Path stream and store valid documents in file list
+			Stream<Path> pathStream = Files.list(workingDirectory);
+			fileList = pathStream.filter(isDocx.or(isNotHidden))
+					.collect(Collectors.toList());
+			pathStream.close();
 		
 		} // End outer if
 		
@@ -117,9 +112,8 @@ public abstract class Task {
 	 * the choice to enter another directory path or exit.
 	 * 
 	 * @param keyboard
-	 * @return Path object or null if user decides to exit.
 	 */
-	public Path getDirectory(Scanner keyboard) {
+	public void getDirectory(Scanner keyboard) {
 		
 		// Path object to return
 		Path path = null;
@@ -156,16 +150,20 @@ public abstract class Task {
 		}
 		
 		// Post1 User input collected
-		return path;
+		workingDirectory = path;
 		
 	}
 	
-	public LinkedList<Path> getFileList() {
+	public List<Path> getFileList() {
 		return fileList;
 	}
 	
 	public Secret getSecret() {
 		return secret;
+	}
+	
+	public Path getWorkingDirectory() {
+		return workingDirectory;
 	}
 	
 	/**
@@ -176,12 +174,38 @@ public abstract class Task {
 	 */
 	abstract public void performTask();
 	
-	public void setFileList(LinkedList<Path> paths) {
+	public void setFileList(List<Path> paths) {
 		fileList = paths;
 	}
 	
 	public void setSecret(Secret uSecret) {
 		secret = uSecret;
+	}
+	
+	public void setWorkingDirectory(Path path) {
+		workingDirectory = path;
+	}
+	
+	/**
+	 * Intent: Determine if task to run is a tamper task and adjust the
+	 * working directory for the 'GRADED' sub-directory. If 'GRADED' is not
+	 * found through new FileNotFoundException.
+	 * @param taskType
+	 * @throws FileNotFoundException
+	 */
+	private void testTamperPath(String taskType) throws FileNotFoundException {
+		
+		// Test is task to execute is a tamper task
+		if (taskType.equals("tamper")) {
+			// Get 'GRADED' directory
+			workingDirectory = Paths.get(workingDirectory.toString(), 
+					"GRADED");
+			// Determine if assignments have been graded
+			if (!(Files.isDirectory(workingDirectory))) {
+				throw new FileNotFoundException("Assignments have not "
+						+ "been graded.\n\tPlease grade assignments first.");
+			}	
+		}
 	}
 	
 }

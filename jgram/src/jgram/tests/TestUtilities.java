@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -19,7 +20,6 @@ import jgram.task.EvaluationTask;
 import jgram.task.NewDocumentTask;
 import jgram.task.TamperTestTask;
 import jgram.task.Task;
-import jgram.utilities.LinkedList;
 
 public class TestUtilities {
 	
@@ -85,24 +85,29 @@ public class TestUtilities {
 		if (task instanceof EvaluationTask) {
 			task = (EvaluationTask) task;
 			task = spy(EvaluationTask.class);
+			task.setWorkingDirectory(path.getParent());
 			Secret secret = new Secret("secret");
 			task.setSecret(secret);
+		
 		} else if(task instanceof TamperTestTask) {
 			// Task is TamperTestTask object
 			task = (TamperTestTask) task;
 			task = spy(TamperTestTask.class);
+			task.setWorkingDirectory(path.getParent());
 			Secret secret = new Secret("secret");
 			task.setSecret(secret);
+		
 		} else {
 			// Task is NewDocumentTask object
 			task = (NewDocumentTask) task;
 			task = spy(NewDocumentTask.class);
+			task.setWorkingDirectory(path.getParent());
 		}
 			
 		doNothing().when(task).createFileList(taskString);
 		
 		// Simulate output from Task.createFileList method
-		LinkedList<Path> fileList = new LinkedList<>();
+		List<Path> fileList = new ArrayList<>();
 		fileList.add(path);
 		
 		// Run performTask

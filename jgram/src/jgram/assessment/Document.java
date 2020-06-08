@@ -11,6 +11,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.poi.xwpf.usermodel.XWPFComment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -22,13 +27,9 @@ import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblLayoutType;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblLayoutType;
 
-import jgram.exceptions.InvalidCheckpointException;
 import jgram.exceptions.InvalidCommentException;
-import jgram.exceptions.InvalidGradeMappingException;
-import jgram.exceptions.InvalidTableException;
 import jgram.security.JWT;
 import jgram.security.Secret;
-import jgram.utilities.LinkedList;
 
 /**
  * Intent: Represent a Word Document assignment with comments that contain
@@ -72,8 +73,8 @@ public class Document {
 	
 	// Instance variable(s)
 	private Path assignmentPath;
-	private LinkedList<Comment> commentList;
-	private LinkedList<Checkpoint> checkpointList;
+	private List<Comment> commentList;
+	private List<Checkpoint> checkpointList;
 	private GradeMapping gradeMapping;
 	private Result result;
 	private String hashString;
@@ -82,15 +83,15 @@ public class Document {
 	
 	// Constructor(s)
 	public Document() {
-		commentList = new LinkedList<>();
-		checkpointList = new LinkedList<>();
+		commentList = new ArrayList<>();
+		checkpointList = new ArrayList<>();
 		gradeMapping = new GradeMapping();
 	}
 	
 	public Document(Path path) {
 		assignmentPath = path;
-		commentList = new LinkedList<>();
-		checkpointList = new LinkedList<>();
+		commentList = new ArrayList<>();
+		checkpointList = new ArrayList<>();
 		gradeMapping = new GradeMapping();
 	}
 	
@@ -138,11 +139,6 @@ public class Document {
 		String targetDirectory = assignmentPath.getParent().toString() 
 				+ "/GRADED";
 		Path pathTargetDirectory = Paths.get(targetDirectory);
-		
-		// If the directory does not exit create it
-		if (!(Files.isDirectory(pathTargetDirectory))) {
-			Files.createDirectories(pathTargetDirectory);
-		}
 		
 		// Define and create copy of assignment file
 		String targetFile =  pathTargetDirectory.toString() 
@@ -276,11 +272,11 @@ public class Document {
 		return assignmentPath;
 	}
 	
-	public LinkedList<Checkpoint> getCheckpointList() {
+	public List<Checkpoint> getCheckpointList() {
 		return checkpointList;
 	}
 	
-	public LinkedList<Comment> getCommentList() {
+	public List<Comment> getCommentList() {
 		return commentList;
 	}
 	
@@ -290,50 +286,6 @@ public class Document {
 	
 	public String getHashString() {
 		return hashString;
-	}
-	
-	/**
-	 * Intent: Return hash string stored in previously graded Word document.
-	 * 
-	 * Precondition1 (Previously graded file): A previously graded Word document
-	 * exists in the sub-directory 'GRADED' and the file name has 'GRADED_' 
-	 * prepended to it.
-	 * 
-	 * Postcondition1 (Locate graded file): The previously graded file is 
-	 * located and stored as an XWPFDocument object.
-	 * Postcondition2 (Table extraction): The results table is  extracted from
-	 * the previously graded file. An error is thrown if the table cannot be 
-	 * found.
-	 * Postcondition3 (Hash string extraction): The hash string is extracted 
-	 * from the last row in the table. An error is thrown if the hash string
-	 * cannot be found.
-	 */
-	private void getHashStringFromFile() throws IOException, 
-			InvalidTableException {
-		
-		// Post1 Locate previously graded file
-		String parentDirectory = assignmentPath.getParent().toString();
-		String filename = assignmentPath.getFileName().toString();
-		String prevGradedFile = parentDirectory + "/" + filename;
-		Path prevPath = Paths.get(prevGradedFile);
-		
-		XWPFDocument prevDocument = retrieveXWPFDocument(prevPath);
-		
-		// Post2 Table extraction
-		List<XWPFTable> tables = prevDocument.getTables();
-		if (tables.isEmpty()) {
-			throw new InvalidTableException();
-		}
-		XWPFTable lastTable = tables.get(tables.size() - 1);
-	    
-		// Post3 Hash string extraction
-		List<XWPFTableRow> rows = lastTable.getRows();
-		if (!(isValidRows(rows))) {
-			throw new InvalidTableException();
-		}
-	    int lastRowIndex = rows.size() -1;
-        hashString = lastTable.getRow(lastRowIndex).getCell(3).getText();
-		
 	}
 	
 	public Result getResult() {
@@ -368,8 +320,8 @@ public class Document {
 		}
 
 		// Display total grade
-		resultTable.append(String.format("\n%4s %8s %7.2f   %10s\n", "", "Σ",
-			result.getTotalGrade(), hashString));
+		resultTable.append(String.format("\n%4s %8s %7.2f\n", "", "Σ",
+			result.getTotalGrade()));
 
 
 		// Return result table string
@@ -378,57 +330,54 @@ public class Document {
 	}
 	
 	/**
-	 * Test for valid table rows in graded Word document assignment.
-	 * @param rows
-	 * @return boolean
-	 */
-	private boolean isValidRows(List<XWPFTableRow> rows) {
-		
-		boolean validRows = (!(rows.isEmpty()) 
-				&& !(rows.get(0).getTableCells().isEmpty())
-				&& rows.get(0).getCell(0).getText().equals("C#"));
-		
-		return validRows;
-		
-	}
-	
-	/**
 	 * Intent: (Post3) Extract checkpoints from comment list and store 
 	 * checkpoints in a list. 
 	 * 
-	 * Postcondition1 (Track valid checkpoints): A list of Checkpoints is 
-	 * created from valid checkpoint data.
-	 * Postcondition2 (Track invalid checkpoints): A list of comments that
-	 * contain invalid checkpoint data is created and stored in an exception.
+	 * Postcondition1 (Track invalid checkpoints): A list of invalid comments is
+	 * created that contain invalid checkpoint data.
+	 * Postcondition2 (Predicate interface object): A Predicate interface object
+	 * is created that tests for checkpoint data present in Comment objects.
+	 * Postcondition3 (Function interface with result): A Function interface 
+	 * object is created with one Comment argument that returns a Checkpoint 
+	 * result.
+	 * Postcondition4 (Extract and store checkpoints): All checkpoint data
+	 * is extracted from Comment objects and stored as Checkpoint objects in
+	 * a list.
+	 * Postcondition5 (Test for invalid comments): Invalid comments have been 
+	 * stored in a list if present and are passed as exception data to the 
+	 * calling method.
 	 */
 	public void parseCheckpoints() throws InvalidCommentException {
 		
-		// Loop through comments list and extract comments that contain
-		// checkpoints
+		// Post1 Track invalid checkpoints
 		ArrayList<Integer> invalidCommentList = new ArrayList<>();
-		for (Comment comment : commentList) {
-			
-			if (comment.getText().contains(CHECKPOINT)) {
-				
-				// Try to create a Checkpoint object
-				try {
-					
-					Checkpoint checkpoint = 
-							comment.extractCheckpoint(gradeMapping);
-					//Post1 Keep track of any valid checkpoints
-					checkpointList.add(checkpoint);
-				
-				} catch (InvalidCommentException e) {
-					
-					//Post2 Keep track of any invalid checkpoints
-					int id = e.getCommentID();
-					invalidCommentList.add(id);
-					
-				}
-			}
-		}
 		
-		// Test for invalid comments
+		// Post2 Predicate interface object
+		Predicate<Comment> isCheckpoint = (comment -> comment
+														.getText()
+														.contains(CHECKPOINT));
+		
+		// Post3 Function interface object with result
+		Function<Comment, Checkpoint> checkpointCreator = comment -> {
+			try {
+				return comment.extractCheckpoint(gradeMapping);
+			
+			} catch (InvalidCommentException e) {
+				int id = e.getCommentID();
+				invalidCommentList.add(id);
+				return null;
+			}
+		};
+		
+		
+		// Post4 Extract and store checkpoints
+		checkpointList =  commentList
+				.stream()
+				.filter(isCheckpoint)
+				.map(checkpointCreator)
+				.collect(Collectors.toList());
+		
+		// Post5 Test for invalid comments
 		if (!(invalidCommentList.isEmpty()) ) {
 			String message = "\nERROR: Invalid checkpoint data detected in "
 					+ "file";
@@ -444,8 +393,10 @@ public class Document {
 	 * Postcondition1 (XWPF document creation): The assignment path has been 
 	 * converted to a File and passed to the XWPFDocument constructor to create
 	 * an XWPFDocument object that represents a Word document.
-	 * Postcondition2 (List of Comments): A list of Comment objects is created
-	 * from the XWPFDocument object.
+	 * Postcondition2 (List of Document comments ): A list of XWPFComment
+	 * objects is created from the assignment document.
+	 * Postcondition3 (Comment list creation): A list of Comment objects is 
+	 * produced from a Stream of XWPFComment objects.
 	 * 
 	 * @throws IOException
 	 * @throws InvalidCommentException
@@ -455,20 +406,14 @@ public class Document {
 		// Post1 XWPF document creation
 		XWPFDocument documentContent = retrieveXWPFDocument(assignmentPath);
 		
-		// Post2 List of Comments 
+		// Post2 List of Document comments 
 		XWPFComment[] docCommentList = documentContent.getComments();
 		
-		// Loop through list and create Comment objects
-		int length = docCommentList.length;
-		for (int i = 0; i < length; i++) {
-			
-			XWPFComment dc = docCommentList[i];
-			
-			Comment comment = new Comment(dc.getId(), dc.getAuthor(), 
-					dc.getText());
-			
-			commentList.add(comment);
-		}
+		// Post3 Comment list creation
+		Stream<XWPFComment> xwpfStream = Stream.of(docCommentList);
+		commentList = xwpfStream
+				.map(dc -> new Comment(dc.getId(), dc.getAuthor(), dc.getText()))
+				.collect(Collectors.toList());
 		
 		// Close open resources
 		documentContent.close();
@@ -479,47 +424,36 @@ public class Document {
 	/**
 	 * Intent: (Post2) Extract grade mapping from comment list and store
 	 * in GradeMapping instance variable.
+	 * 
+	 * Precondition1 (Comment data): Comment data has been parsed and stored.
+	 * 
+	 * Postcondition1 (Predicate interface object): A predicate interface 
+	 * object is defined as an argument to the filter operation.
+	 * Postcondition2 (Extract grade mapping data): A GradeMapping object
+	 * is created from the results of filtering the comment stream.
 	 */
 	public void parseGradeMapping() throws InvalidCommentException {
 		
-		// Loop through comments list and extract grade mapping
-		for (Comment comment: commentList) {
-			
-			if (comment.getText().contains(GRADE_MAPPING)) {
-				gradeMapping = comment.extractGradeMapping();
-				break;
-			}
+		
+		// Post1 Predicate interface object
+		Predicate<Comment> isGradeMapping = (comment -> comment
+														.getText()
+														.contains(GRADE_MAPPING));
+		
+		// Post2 Extract grade mapping data
+		Optional<Comment> gradeMappingData = commentList
+				.stream()
+				.filter(isGradeMapping)
+				.findAny();
+		
+		// Test if grade mapping data was retrieved
+		if (gradeMappingData.isPresent()) {
+			gradeMapping = gradeMappingData.get().extractGradeMapping();
+		} else {
+			gradeMapping = new GradeMapping();
 		}
-		
-	}
-	
-	/**
-	 * Intent: Retrieve previous result from txt file and create Result
-	 * and GradeMapping objects stored in Document.
-	 * 
-	 * Precondition1 (Previously graded): Assignment document has been 
-	 * previously graded and a txt file for that assignment exits.
-	 * 
-	 * Postcondition1 (Previous result): Previous result's hash 
-	 * string is retrieved from txt file.
-	 * Postcondition2 (Create JWT): JWT object is created using user's secret.
-	 * Postcondition3 (Decode hash string): Previous result's hash string
-	 * is decoded and Result and GradeMapping objects have been created and 
-	 * stored in Document object.
-	 * @param secret String that represents user secret
-	 */
-	public void retrieveResult(Secret secret) throws IOException, 
-			InvalidTableException, InvalidCheckpointException,	
-			InvalidGradeMappingException {
-		
-		// Post1 Previous result
-		getHashStringFromFile();
-		
-		// Post2 Create JWT
-		JWT jwt = new JWT(secret);
-		
-		// Post3 Decode hash string
-		jwt.decode(this);
+				
+
 	}
 	
 	/**
@@ -583,11 +517,11 @@ public class Document {
 		
 	}
 	
-	public void setCheckpointList(LinkedList<Checkpoint> cpList) {
+	public void setCheckpointList(List<Checkpoint> cpList) {
 		checkpointList = cpList;
 	}
 	
-	public void setCommentList(LinkedList<Comment> cList) {
+	public void setCommentList(List<Comment> cList) {
 		commentList = cList;
 	}
 	
@@ -624,8 +558,8 @@ public class Document {
 		XWPFTableRow resultRow = table.createRow();
 		resultRow.getCell(0).setText("");
 		resultRow.getCell(1).setText("Σ");
-        resultRow.getCell(2).setText(String.format("%.2f", result.getTotalGrade()));
-        resultRow.getCell(3).setText(hashString);
+        resultRow.getCell(2).setText(String.format("%.2f", 
+        		result.getTotalGrade()));
 
         // Format result row
         resultRow.getCell(2).setColor("8fbc8f");

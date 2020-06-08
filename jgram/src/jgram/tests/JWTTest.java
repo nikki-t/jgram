@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import jgram.assessment.Comment;
@@ -14,7 +17,6 @@ import jgram.exceptions.InvalidCommentException;
 import jgram.exceptions.InvalidGradeMappingException;
 import jgram.security.JWT;
 import jgram.security.Secret;
-import jgram.utilities.LinkedList;
 
 class JWTTest {
 	
@@ -40,7 +42,7 @@ class JWTTest {
 				+ "keyword to exit the for loop once the element is found.])");
 		Comment comment4 = new Comment("3", "Nikki Tebaldi", "GRADEMAPPING(A+=97, "
 				+ "A=95, A-=93, B+=87, B=85, B-=83, C=77, F=67)");
-		LinkedList<Comment> documentComments = new LinkedList<>();
+		List<Comment> documentComments = new ArrayList<>();
 		documentComments.add(comment1);
 		documentComments.add(comment2);
 		documentComments.add(comment3);

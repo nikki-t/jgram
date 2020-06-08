@@ -20,12 +20,11 @@ import jgram.assessment.Checkpoint;
 import jgram.assessment.Comment;
 import jgram.assessment.Document;
 import jgram.assessment.GradeMapping;
+import jgram.assessment.JustInTimeEvaluator;
+import jgram.assessment.Result;
 import jgram.exceptions.InvalidCheckpointException;
 import jgram.exceptions.InvalidCommentException;
-import jgram.exceptions.InvalidGradeMappingException;
-import jgram.exceptions.InvalidTableException;
 import jgram.security.Secret;
-import jgram.utilities.LinkedList;
 
 class DocumentTest {
 	
@@ -100,48 +99,43 @@ class DocumentTest {
 		
 	}
 	
-	/**
-	 * Intent: Test that the hash string returned from a graded file
-	 * is the same as the hash string constructed from grading the file.
-	 */
 	@Test
-	void testGetHashStringFromFile() {
+	void testGetResultTableString() {
 		
-		// Locate ungraded test file
-		Path ungradedDocumentPath = TestUtilities
-				.returnAssignmentPath("document-test.docx");
+		// Create an LinkedList of checkpoints
+		List<Checkpoint> checkpointList = new ArrayList<>();
 		
-		// Create a secret object to use for hash string creation
-		Secret secret = new Secret("secret");
-					
-		// Create a Document object, parse it for checkpoints, and grade it
-		Document ungradedDocument = new Document(ungradedDocumentPath);
 		try {
+			checkpointList.add(new Checkpoint(7, 90, "", 1));
+			checkpointList.add(new Checkpoint(5, 91, "great clarity", 2));
+			checkpointList.add(new Checkpoint(7, 95, "Use generics, "
+					+ "but overall good work", 3));
 			
-			createDocument(ungradedDocument, secret);
-			
-		} catch (IOException | InvalidCommentException e) {
-			fail("Invalid test file.");
+		} catch (InvalidCheckpointException e) {
+			fail("Invalid checkpoint data encountered.");
 		}
 		
-		// Retrieve graded result with hash string from graded test file
-		Path gradedDocumentPath = TestUtilities
-				.returnAssignmentPath("/GRADED/GRADED_document-test.docx");
-		Document gradedDocument = new Document(gradedDocumentPath);
-		try {
-			
-			gradedDocument.retrieveResult(secret);
-			
-		} catch (IOException | InvalidGradeMappingException 
-				| InvalidTableException | InvalidCheckpointException e) {
-			fail("Unable to grade document or retrieve graded result.");
-		}
+		// Create Result object
+		JustInTimeEvaluator jitEval1 = new JustInTimeEvaluator(checkpointList);
+		Result result = jitEval1.evaluate();
 		
-		// Assert that hash string from document prior to writing result equals 
-		// hash string in graded document
-		assertEquals(ungradedDocument.getHashString(),
-				gradedDocument.getHashString());
+		// Create a new document
+		Document document = new Document();
+		document.setCheckpointList(checkpointList);
+		document.setResult(result);
 		
+		// Retrieve resultTable
+		String resultTable = document.getResultTableString();
+		
+		// Expected output
+		String expectedTable =  "  C#   Weight   Grade   Feedback"
+			+ "\n   1        7      90   "
+			+ "\n   2        5      91   great clarity"
+			+ "\n   3        7      95   Use generics, but overall good work"
+			+ "\n            Σ   92.11\n";
+		
+		assertEquals(expectedTable, resultTable);
+
 	}
 	
 	/**
@@ -163,7 +157,7 @@ class DocumentTest {
 			document.parseCheckpoints();
 			
 			// Create an LinkedList of checkpoints for comparison
-			LinkedList<Checkpoint> checkpointList = new LinkedList<>();
+			List<Checkpoint> checkpointList = new ArrayList<>();
 			
 			checkpointList.add(new Checkpoint(3, 85, "Throws "
 					+ "ArrayIndexOutOfBoundsException; watch out for the " 
@@ -212,7 +206,7 @@ class DocumentTest {
 			document1.parseComments();
 			
 			// Create a list of comments to compare Document operation result to
-			ArrayList<Comment> commentsList = new ArrayList<>();
+			List<Comment> commentsList = new ArrayList<>();
 			Comment c1 = new Comment("0", "Nikki Tebaldi", 
 					"CHECKPOINT( WEIGHT=3, GRADE=85, FEEDBACK=[Throws "
 					+ "ArrayIndexOutOfBoundsException; watch out for the "

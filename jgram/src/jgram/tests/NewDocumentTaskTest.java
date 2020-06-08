@@ -7,11 +7,12 @@ import static org.mockito.Mockito.spy;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import jgram.task.NewDocumentTask;
-import jgram.utilities.LinkedList;
 
 public class NewDocumentTaskTest {
 	
@@ -38,7 +39,7 @@ public class NewDocumentTaskTest {
 		}
 		
 		// Simulate output from Task.createFileList method
-		LinkedList<Path> fileList = new LinkedList<>();
+		List<Path> fileList = new ArrayList<>();
 		fileList.add(resourceDocument);
 		task.setFileList(fileList);
 		
@@ -80,7 +81,7 @@ public class NewDocumentTaskTest {
 		}
 		
 		// Simulate output from Task.createFileList method
-		LinkedList<Path> fileList = new LinkedList<>();
+		List<Path> fileList = new ArrayList<>();
 		fileList.add(resourceDocument);
 		task.setFileList(fileList);
 		
