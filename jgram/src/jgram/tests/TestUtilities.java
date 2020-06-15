@@ -1,25 +1,15 @@
 package jgram.tests;
 
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.spy;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
-
-import jgram.security.Secret;
-import jgram.task.EvaluationTask;
-import jgram.task.NewDocumentTask;
-import jgram.task.TamperTestTask;
-import jgram.task.Task;
 
 public class TestUtilities {
 	
@@ -54,6 +44,20 @@ public class TestUtilities {
 		
 		return rows;
 	}
+	
+	/**
+	 * Intent: Return Path object that represent assignment directory 
+	 * that contains test files on the file system.
+	 * @return
+	 */
+	public static Path returnAssignmentDir(String filename) {
+		
+		String filePath = new File("").getAbsolutePath();
+		filePath += "/src/jgram/tests/resources/" + filename;
+		Path resourceDir = Paths.get(filePath).getParent();
+		
+		return resourceDir;
+	}
 
 	/**
 	 * Intent: Return Path object that represent assignment test file on the
@@ -67,53 +71,6 @@ public class TestUtilities {
 		Path resourceDocument = Paths.get(filePath);
 		
 		return resourceDocument;
-	}
-	
-	/**
-	 * Intent: Create a mock of Task.createFileList and runs the task's 
-	 * performTask method using a test assignment as input.
-	 * @param task
-	 * @param path
-	 * @param taskString
-	 * @throws IOException
-	 */
-	public static void runPerformTask(Task task, Path path, String taskString) 
-			throws IOException {
-		
-		// Mock createFileList
-		// Test if task as EvaluationTask object
-		if (task instanceof EvaluationTask) {
-			task = (EvaluationTask) task;
-			task = spy(EvaluationTask.class);
-			task.setWorkingDirectory(path.getParent());
-			Secret secret = new Secret("secret");
-			task.setSecret(secret);
-		
-		} else if(task instanceof TamperTestTask) {
-			// Task is TamperTestTask object
-			task = (TamperTestTask) task;
-			task = spy(TamperTestTask.class);
-			task.setWorkingDirectory(path.getParent());
-			Secret secret = new Secret("secret");
-			task.setSecret(secret);
-		
-		} else {
-			// Task is NewDocumentTask object
-			task = (NewDocumentTask) task;
-			task = spy(NewDocumentTask.class);
-			task.setWorkingDirectory(path.getParent());
-		}
-			
-		doNothing().when(task).createFileList(taskString);
-		
-		// Simulate output from Task.createFileList method
-		List<Path> fileList = new ArrayList<>();
-		fileList.add(path);
-		
-		// Run performTask
-		task.setFileList(fileList);
-		task.performTask();
-
 	}
 
 }

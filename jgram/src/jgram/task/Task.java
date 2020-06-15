@@ -8,7 +8,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.function.Function;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -29,15 +30,19 @@ public abstract class Task {
 	private Secret secret;
 	private List<Path> fileList;
 	private Path workingDirectory;
+	private ExecutorService executorService;
+	private int threadCount;
 
 	// Constructor(s)
 	public Task() {
 		fileList = new ArrayList<>();
+		executorService = Executors.newFixedThreadPool(10);
 	}
 	
 	public Task(String userSecret) {
 		secret = new Secret(userSecret);
 		fileList = new ArrayList<>();
+		executorService = Executors.newFixedThreadPool(10);
 	}
 	
 	/**
@@ -47,51 +52,68 @@ public abstract class Task {
 	 * Precondition1 (Selected task): User has selected a task that requires
 	 * a list of files to execute on.
 	 * 
-	 * Postcondition1 (Obtain directory path): A directory path is obtained 
-	 * from the user or a null value is returned if the user wishes to exit.
-	 * Postcondition3 (Filter Predicate interface object): A Predicate interface
+	 * Postcondition1 (Filter Predicate interface object): A Predicate interface
 	 * object is created for use with stream filter method and tests for
 	 * file names that end with ".docx".
-	 * Postcondition4 (Filter Predicate interface object): A Predicate interface
+	 * Postcondition2 (Filter Predicate interface object): A Predicate interface
 	 * object is created for use with stream filter method and tests for
 	 * file names that start with "~".  
-	 * Postcondition4 (Create Path stream and store valid documents): A Path
+	 * Postcondition3 (Create Path stream and store valid documents): A Path
 	 * stream is created and valid Path files are extracted from the stream
 	 * and stored in fileList.
 	 * 
 	 * @throws IOException
 	 */
-	public void createFileList(String taskType) throws IOException {
-		
-		// Post1 Obtain directory path
-		Scanner keyboard = new Scanner(System.in);
-		getDirectory(keyboard);
+	public void createFileList() throws IOException {
 		
 		// Valid path has been entered
 		if (workingDirectory != null) {
 			
-			// Test what directory path to obtain
-			testTamperPath(taskType);
-			
-			// Post2 Filter Predicate interface object
+			// Post1 Filter Predicate interface object
 			Predicate<Path> isDocx = (p -> {
 				String name = p.getName(p.getNameCount() - 1).toString();
 				return name.endsWith(".docx");
 			});
 			
-			// Post3 Filter Predicate interface object
+			// Post2 Filter Predicate interface object
 			Predicate<Path> isNotHidden = (p -> {
 				String name = p.getName(p.getNameCount() - 1).toString();
 				return name.startsWith("~");
 			});
 			
-			// Post4 Create Path stream and store valid documents in file list
+			// Post3 Create Path stream and store valid documents in file list
 			Stream<Path> pathStream = Files.list(workingDirectory);
 			fileList = pathStream.filter(isDocx.or(isNotHidden))
 					.collect(Collectors.toList());
 			pathStream.close();
 		
 		} // End outer if
+		
+	}
+	
+	/**
+	 * Intent: Display Exception messages and current status to the console.
+	 * 
+	 * Postcondition1 (Error message): The error message is displayed on the
+	 * console.
+	 * Postcondition2 (Directory name): The working directory name is converted
+	 * to a string.
+	 * 
+	 * @param e
+	 */
+	public void displayException(Exception e, String message) {
+		
+		// Post1 Error message
+		System.out.println("\nERROR: " + e.getMessage());
+		System.out.println("\t" + message);
+		
+		// Post2 Directory name
+		String directory;
+		if (workingDirectory != null) {
+			directory = workingDirectory.toString();
+			System.out.println("\tError occured in the following directory: " 
+					+ directory);
+		}
 		
 	}
 	
@@ -143,7 +165,7 @@ public abstract class Task {
 				
 				String message = "\nYou entered an invalid directory. "
 						+ "\n\tPlease enter '0' to exit to the main menu "
-						+ "\n\tOR enter a new directory path: ";
+						+ "\n\tOR enter a new directory path.";
 				System.out.println(message);
 			}
 			
@@ -154,6 +176,29 @@ public abstract class Task {
 		
 	}
 	
+	/**
+	 * Intent: Get working directory and create a list of valid Word files found
+	 * in working directory. Throws FileNotFoundException is no valid files
+	 * are found.
+	 * @throws IOException
+	 */
+	public void getDirectoryAndFileList() throws IOException {
+		// Post1 Create file list
+		Scanner keyboard = new Scanner(System.in);
+		getDirectory(keyboard);
+		createFileList();
+			
+		// Return to main menu if file list was not found
+		if (getFileList().isEmpty()) {
+			throw new FileNotFoundException("\nNo Word documents were "
+					+ "found.");
+		}
+	}
+	
+	public ExecutorService getExecutorService() {
+		return executorService;
+	}
+	
 	public List<Path> getFileList() {
 		return fileList;
 	}
@@ -162,8 +207,16 @@ public abstract class Task {
 		return secret;
 	}
 	
+	public synchronized int getThreadCount() {
+		return threadCount;
+	}
+	
 	public Path getWorkingDirectory() {
 		return workingDirectory;
+	}
+	
+	public synchronized void incrementThreadCount() {
+		threadCount++;
 	}
 	
 	/**
@@ -173,6 +226,12 @@ public abstract class Task {
 	 * for postconditions.
 	 */
 	abstract public void performTask();
+	
+	/**
+	 * Intent: Perform preparation operations required to run specific Task 
+	 * performTask method.
+	 */
+	abstract protected void prep() throws Exception;
 	
 	public void setFileList(List<Path> paths) {
 		fileList = paths;
@@ -184,28 +243,6 @@ public abstract class Task {
 	
 	public void setWorkingDirectory(Path path) {
 		workingDirectory = path;
-	}
-	
-	/**
-	 * Intent: Determine if task to run is a tamper task and adjust the
-	 * working directory for the 'GRADED' sub-directory. If 'GRADED' is not
-	 * found through new FileNotFoundException.
-	 * @param taskType
-	 * @throws FileNotFoundException
-	 */
-	private void testTamperPath(String taskType) throws FileNotFoundException {
-		
-		// Test is task to execute is a tamper task
-		if (taskType.equals("tamper")) {
-			// Get 'GRADED' directory
-			workingDirectory = Paths.get(workingDirectory.toString(), 
-					"GRADED");
-			// Determine if assignments have been graded
-			if (!(Files.isDirectory(workingDirectory))) {
-				throw new FileNotFoundException("Assignments have not "
-						+ "been graded.\n\tPlease grade assignments first.");
-			}	
-		}
 	}
 	
 }

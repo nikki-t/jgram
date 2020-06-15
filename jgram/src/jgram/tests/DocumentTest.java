@@ -56,7 +56,7 @@ class DocumentTest {
 		
 		// Locate test assignment file
 		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("document-test.docx");
+				.returnAssignmentPath("document/document-test.docx");
 		
 		// Create a secret object to use for hash string creation
 		Secret secret = new Secret("secret");
@@ -66,7 +66,7 @@ class DocumentTest {
 		try {
 			createDocument(document, secret);
 		} catch (IOException | InvalidCommentException e) {
-			fail("Invalid test file.");
+			fail(e.getMessage());
 		}
 		
 		// Assert graded directory exists
@@ -149,7 +149,7 @@ class DocumentTest {
 			
 			// Locate test assignment file
 			Path resourceDocument = TestUtilities
-					.returnAssignmentPath("document-test.docx");
+					.returnAssignmentPath("document/document-test.docx");
 						
 			// Create a Document object and parse it for checkpoints
 			Document document = new Document(resourceDocument);
@@ -199,7 +199,7 @@ class DocumentTest {
 			
 			// Locate test assignment file
 			Path resourceDocument = TestUtilities
-					.returnAssignmentPath("document-test.docx");
+					.returnAssignmentPath("document/document-test.docx");
 			
 			// Create a document and parse it for comments
 			Document document1 = new Document(resourceDocument);
@@ -254,7 +254,7 @@ class DocumentTest {
 			
 			// Locate test assignment file
 			Path resourceDocument = TestUtilities
-					.returnAssignmentPath("document-test.docx");
+					.returnAssignmentPath("document/document-test.docx");
 			
 			// Create a Document and parse it for a grade mapping
 			Document document = new Document(resourceDocument);

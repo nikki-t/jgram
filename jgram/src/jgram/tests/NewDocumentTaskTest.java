@@ -1,14 +1,19 @@
 package jgram.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.spy;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
@@ -16,16 +21,11 @@ import jgram.task.NewDocumentTask;
 
 public class NewDocumentTaskTest {
 	
-	/**
-	 * Intent: Test the performTask method in the NewDocumenTask class on an
-	 * invalid Word document (i.e. a Word document with grading data).
-	 */
-	@Test
-	void testPerformTaskInvalid() {
+	private NewDocumentTask performTask(Path resourceDir) {
 		
-		// Locate test assignment file
-		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("new-doc-test-invalid.docx");		
+		// Change System.in to point to input
+		InputStream in = new ByteArrayInputStream(resourceDir.toString().getBytes());
+		System.setIn(in);
 		
 		// Create NewDocumentTask object
 		NewDocumentTask task = new NewDocumentTask();
@@ -33,64 +33,48 @@ public class NewDocumentTaskTest {
 		// Mock createFileList
 		task = spy(NewDocumentTask.class);
 		try {
-			doNothing().when(task).createFileList("new");
+			doNothing().when(task).createFileList();
 		} catch (IOException e) {
 			fail("Could not create mock of createFileList method.");
 		}
 		
 		// Simulate output from Task.createFileList method
-		List<Path> fileList = new ArrayList<>();
-		fileList.add(resourceDocument);
-		task.setFileList(fileList);
+		try {
+			Stream<Path> pathStream = Files.list(resourceDir);
+			List<Path> fileList = pathStream.collect(Collectors.toList());
+			pathStream.close();
+			task.setFileList(fileList);
+			
+		} catch (IOException e) {
+			fail("Could not create file list.");
+		}
 		
 		// Perform task
 		task.performTask();
 		
-		// Expected message
-		String expMessage = "\nFOUND checkpoint data in the following comments: "
-			+ "\n\tComment #1"
-			+ "\n\tComment #2"
-			+ "\n\tComment #3"
-			+ "\nFOUND grade mapping data.";
-		
-		// Assert task message
-		assertEquals(expMessage, task.getMessage());
-
+		return (NewDocumentTask) task;
 	}
 	
 	/**
-	 * Intent: Test the performTask method in the NewDocumenTask class on a
-	 * valid Word document (i.e. a Word document with no grading data).
+	 * Intent: Test the performTask method in the NewDocumenTask class on an
+	 * invalid Word document (i.e. a Word document with grading data).
 	 */
 	@Test
-	void testPerformTaskValid() {
+	void testPerformTask() {
 		
 		// Locate test assignment file
-		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("new-doc-test-valid.docx");		
-		
-		// Create NewDocumentTask object
-		NewDocumentTask task = new NewDocumentTask();
-		
-		// Mock createFileList
-		task = spy(NewDocumentTask.class);
-		try {
-			doNothing().when(task).createFileList("new");
-		} catch (IOException e) {
-			fail("Could not create mock of createFileLlist method.");
-		}
-		
-		// Simulate output from Task.createFileList method
-		List<Path> fileList = new ArrayList<>();
-		fileList.add(resourceDocument);
-		task.setFileList(fileList);
+		Path resourceDir = TestUtilities
+				.returnAssignmentDir("newdoc/new-doc-test-invalid.docx");
 		
 		// Perform task
-		task.performTask();
+		NewDocumentTask task = performTask(resourceDir);
 		
-		// Assert task message
-		assertEquals("\nNo grading data detected.", task.getMessage());
-
+		// Assert finished executing threads
+		assertTrue(task.getExecutorService().isTerminated());
+		
+		// Assert expected thread count
+		assertEquals(2, task.getThreadCount());
+		
 	}
 
 }

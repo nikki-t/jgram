@@ -53,7 +53,7 @@ public class Checkpoint {
 		if (inputWeight >= MIN_WEIGHT  && inputWeight <= MAX_WEIGHT) {
 			weight = inputWeight;
 		} else {
-			throw new InvalidCheckpointException("ERROR: Invalid checkpoint "
+			throw new InvalidCheckpointException("Invalid checkpoint "
 					+ "data encountered.");
 		}
 		
@@ -61,7 +61,7 @@ public class Checkpoint {
 		if (inputGrade >= MIN_GRADE && inputGrade <= MAX_GRADE) {
 			grade = inputGrade;
 		} else {
-			throw new InvalidCheckpointException("ERROR: Invalid checkpoint "
+			throw new InvalidCheckpointException("Invalid checkpoint "
 					+ "data encountered.");
 		}
 		

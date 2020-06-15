@@ -17,7 +17,7 @@ In Eclipse:
 ## Operation
 
 To run JGRAM:
-* Execute MainJGRAM.java which serves as the main entry point to 
+* Execute MainJGRAM.java which serves as the main entry point to
 the JGRAM program
 * Enter numbers 1 through 5 to indicate the choice in task
 you would like to run
@@ -25,9 +25,11 @@ you would like to run
 
 ## File List
 ```
+.
+└── jgram
     ├── README.md
     └── jgram
-        ├── README-A4.txt
+        ├── README-A5.txt
         ├── pom.xml
         └── src
             └── jgram
@@ -52,46 +54,61 @@ you would like to run
                 │   ├── Record.java
                 │   └── RecordManager.java
                 ├── task
+                │   ├── EvalTaskRun.java
                 │   ├── EvaluationTask.java
+                │   ├── NewDocTaskRun.java
                 │   ├── NewDocumentTask.java
-                │   ├── TamperTestTask.java
-                │   └── Task.java
+                │   ├── TamperTask.java
+                │   ├── TamperTaskRun.java
+                │   ├── Task.java
+                │   └── TaskRun.java
                 ├── tests
                 │   ├── CheckpointTest.java
                 │   ├── CommentTest.java
                 │   ├── DocumentTest.java
+                │   ├── EvalTaskRunTest.java
                 │   ├── EvaluationTaskTest.java
                 │   ├── GradeMappingTest.java
                 │   ├── JWTTest.java
                 │   ├── JustInTimeEvaluatorTest.java
+                │   ├── NewDocTaskRunTest.java
                 │   ├── NewDocumentTaskTest.java
                 │   ├── RecordManagerTest.java
                 │   ├── RecordTest.java
                 │   ├── ResultTest.java
+                │   ├── TamperTaskRunTest.java
                 │   ├── TamperTaskTest.java
                 │   ├── TaskTest.java
                 │   ├── TestUtilities.java
                 │   └── resources
-                │       ├── GRADED
+                │       ├── document
                 │       │   ├── GRADED
-                │       │   │   ├── GRADED_GRADED_tamper-task-test.docx
+                │       │   │   └── GRADED_document-test.docx
+                │       │   └── document-test.docx
+                │       ├── eval
+                │       │   ├── GRADED
+                │       │   │   ├── GRADED_eval-task-test-valid.docx
                 │       │   │   └── jgram.dat
-                │       │   ├── GRADED_document-test.docx
-                │       │   ├── GRADED_eval-task-test.docx
-                │       │   ├── GRADED_tamper-task-test.docx
-                │       │   ├── jgram.dat
-                │       │   └── report.txt
-                │       ├── document-test.docx
-                │       ├── eval-task-test.docx
-                │       ├── jgram.dat
-                │       ├── new-doc-test-invalid.docx
-                │       ├── new-doc-test-valid.docx
-                │       └── tamper-task-test.docx
+                │       │   ├── eval-task-test-invalid.docx
+                │       │   └── eval-task-test-valid.docx
+                │       ├── newdoc
+                │       │   ├── new-doc-test-invalid.docx
+                │       │   └── new-doc-test-valid.docx
+                │       ├── record
+                │       │   ├── GRADED
+                │       │   │   └── jgram.dat
+                │       │   └── jgram.dat
+                │       └── tamper
+                │           └── GRADED
+                │               ├── GRADED_tamper-task-test-invalid.docx
+                │               ├── GRADED_tamper-task-test-valid.docx
+                │               ├── jgram.dat
+                │               └── report.txt
                 └── utilities
                     └── Validation.java
 ```
 ## Test
-JUnit tests are located jgram/src/jgram/tests 
+JUnit tests are located jgram/src/jgram/tests
 
 ## Contact information
 Developer: Nikki Tebaldi

@@ -23,30 +23,30 @@ public class TaskTest {
 	@Test
 	void testCreateFileList() {
 		
-		// Locate any sample assignment file
-		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("tamper-task-test.docx");
-		
-		// Get file's parent directory as a string
-		Path directory = resourceDocument.getParent();
-		String input = directory.toString();
+		// Locate new doc sample file directory
+		Path resourceDir = TestUtilities
+				.returnAssignmentDir("newdoc/new-doc-test-invalid.docx");
 		
 		// Change System.in to point to input
-		InputStream in = new ByteArrayInputStream(input.getBytes());
+		InputStream in = new ByteArrayInputStream(resourceDir.toString().getBytes());
 		System.setIn(in);
 		
 		// Create a new concrete subclass Task
 		Task task = new NewDocumentTask();
 		
+		// Get working directory
+		Scanner keyboard = new Scanner(System.in);
+		task.getDirectory(keyboard);
+		
 		// Run createFileList method
 		try {
-			task.createFileList("new");
+			task.createFileList();
 		} catch (IOException e) {
 			fail("Unable to obtain files in directory.");
 		}
 		
 		// Assert file list size
-		assertEquals(5, task.getFileList().size());
+		assertEquals(2, task.getFileList().size());
 		
 		// Assert first item in the list
 		// Extract name
@@ -56,7 +56,7 @@ public class TaskTest {
 				.get(0)
 				.getName(nameCount - 1)
 				.toString();
-		assertEquals("document-test.docx", name);		
+		assertEquals("new-doc-test-invalid.docx", name);		
 		
 	}
 	
@@ -66,16 +66,12 @@ public class TaskTest {
 	@Test
 	void testGetDirectory() {
 		
-		// Locate any sample assignment file
-		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("tamper-task-test.docx");
-		
-		// Get file's parent directory as a string
-		Path directory = resourceDocument.getParent();
-		String input = directory.toString();
+		// Locate new doc sample file directory
+		Path resourceDir = TestUtilities
+				.returnAssignmentDir("newdoc/new-doc-test-invalid.docx");
 		
 		// Change System.in to point to input
-		InputStream in = new ByteArrayInputStream(input.getBytes());
+		InputStream in = new ByteArrayInputStream(resourceDir.toString().getBytes());
 		System.setIn(in);
 		
 		// Create a new concrete subclass Task
@@ -98,7 +94,7 @@ public class TaskTest {
 		String name = path
 				.getName(nameCount - 1)
 				.toString();
-		assertEquals("resources", name);		
+		assertEquals("newdoc", name);		
 		
 	}
 

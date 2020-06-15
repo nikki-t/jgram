@@ -21,13 +21,11 @@ import java.util.List;
  */
 public class RecordManager {
 	
-	// Private class variable(s)
-	private static ObjectOutputStream outputStream;
-	private static ObjectInputStream inputStream;
-	
 	// Instance variable(s)
 	private Path directory;
 	private List<Record> recordList;
+	private ObjectOutputStream outputStream;
+	private ObjectInputStream inputStream;
 	
 	// Constructor(s)
 	public RecordManager(Path inputDirectory) {
@@ -51,9 +49,8 @@ public class RecordManager {
 		try {
 			inputStream = new ObjectInputStream(new FileInputStream(filename));
 		} catch (FileNotFoundException e) {
-			throw new FileNotFoundException("Could not locate DAT record file"
-					+ " in GRADED sub-directory.\n\tPlease re-grade "
-					+ "assignment(s).");
+			throw new FileNotFoundException("Could not locate DAT record file."
+					+ "\n\tPlease re-grade assignment(s).");
 		}
 	}
 	
@@ -178,49 +175,6 @@ public class RecordManager {
 		// Post1 Record is written
 		outputStream.writeObject(new Record(id, assignmentName, hashString));
 		
-	}
-	
-	public static void main(String[] args) {
-		
-		Path directory = Paths.get("/Users/ntadmin/Desktop/tests/run/", "GRADED");
-		RecordManager outputManager = new RecordManager(directory);
-		
-		try {
-			outputManager.createOutputStream();
-			
-			outputManager.writeRecord(1, "GRADED_assignment_sample 1.docx", "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIxIiwiaWF0IjoxNTkxMTI4MzM0LCJzdWIiOiJKR1JBTSIsImlzcyI6IkJVLU1FVCIsIjEtV2VpZ2h0IjozLCIxLUdyYWRlIjo4NSwiMS1GZWVkYmFjayI6IlRocm93cyBBcnJheUluZGV4T3V0T2ZCb3VuZHNFeGNlcHRpb247IHdhdGNoIG91dCBmb3IgdGhlIEJvb2xlYW4gY29uZGl0aW9uIHRoYXQgY29udHJvbHMgdGhlIGZvciBsb29w4oCZcyBleGVjdXRpb24uIFRoaXMgZm9yIGxvb3AgZXhlY3V0ZXMgb25lIG1vcmUgdGltZSB0aGFuIHlvdSB3b3VsZCB3YW50IGl0IHRvIGJlY2F1c2Ugb2YgdGhlIGdyZWF0ZXIgdGhhbiBvciBlcXVhbCB0byBzaWduLiIsIjItV2VpZ2h0IjozLCIyLUdyYWRlIjoxMDAsIjItRmVlZGJhY2siOiJFeGNlbGxlbnQgd29yay4gUGxlYXNlIG1ha2Ugc3VyZSB0byBpbmNsdWRlIGNvbW1lbnRzIG5leHQgdGltZS4iLCIzLVdlaWdodCI6NCwiMy1HcmFkZSI6OTAsIjMtRmVlZGJhY2siOiJQZXIgdGhlIHByb21wdCwgdGhlIG1ldGhvZCBzaG91bGQgcmV0dXJuIHRoZSBmaXJzdCBlbGVtZW50IGluIHRoZSBhcnJheTsgdXNlIHRoZSBicmVhayBrZXl3b3JkIHRvIGV4aXQgdGhlIGZvciBsb29wIG9uY2UgdGhlIGVsZW1lbnQgaXMgZm91bmQuIiwiQ1BJbmRleGVzIjoiWzEsIDIsIDNdIiwiR3JhZGVNYXBwaW5nIjoiQSsgPSA5N1xuQSAgPSA5NVxuQS0gPSA5M1xuQisgPSA4N1xuQiAgPSA4NVxuQi0gPSA4M1xuQyAgPSA3N1xuRiAgPSA2N1xuIiwiVG90YWxHcmFkZSI6OTEuNX0.eN5wZIQFjhYk5J2tImXFi_I2xQnDuXbpD58cZFWUYsY");
-			outputManager.writeRecord(2, "GRADED_assignment_sample 2.docx", "fyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIxIiwiaWF0IjoxNTkxMTI4MzM0LCJzdWIiOiJKR1JBTSIsImlzcyI6IkJVLU1FVCIsIjEtV2VpZ2h0IjozLCIxLUdyYWRlIjo4NSwiMS1GZWVkYmFjayI6IlRocm93cyBBcnJheUluZGV4T3V0T2ZCb3VuZHNFeGNlcHRpb247IHdhdGNoIG91dCBmb3IgdGhlIEJvb2xlYW4gY29uZGl0aW9uIHRoYXQgY29udHJvbHMgdGhlIGZvciBsb29w4oCZcyBleGVjdXRpb24uIFRoaXMgZm9yIGxvb3AgZXhlY3V0ZXMgb25lIG1vcmUgdGltZSB0aGFuIHlvdSB3b3VsZCB3YW50IGl0IHRvIGJlY2F1c2Ugb2YgdGhlIGdyZWF0ZXIgdGhhbiBvciBlcXVhbCB0byBzaWduLiIsIjItV2VpZ2h0IjozLCIyLUdyYWRlIjoxMDAsIjItRmVlZGJhY2siOiJFeGNlbGxlbnQgd29yay4gUGxlYXNlIG1ha2Ugc3VyZSB0byBpbmNsdWRlIGNvbW1lbnRzIG5leHQgdGltZS4iLCIzLVdlaWdodCI6NCwiMy1HcmFkZSI6OTAsIjMtRmVlZGJhY2siOiJQZXIgdGhlIHByb21wdCwgdGhlIG1ldGhvZCBzaG91bGQgcmV0dXJuIHRoZSBmaXJzdCBlbGVtZW50IGluIHRoZSBhcnJheTsgdXNlIHRoZSBicmVhayBrZXl3b3JkIHRvIGV4aXQgdGhlIGZvciBsb29wIG9uY2UgdGhlIGVsZW1lbnQgaXMgZm91bmQuIiwiQ1BJbmRleGVzIjoiWzEsIDIsIDNdIiwiR3JhZGVNYXBwaW5nIjoiQSsgPSA5N1xuQSAgPSA5NVxuQS0gPSA5M1xuQisgPSA4N1xuQiAgPSA4NVxuQi0gPSA4M1xuQyAgPSA3N1xuRiAgPSA2N1xuIiwiVG90YWxHcmFkZSI6OTEuNX0.eN5wZIQFjhYk5J2tImXFi_I2xQnDuXbpD58cZFWUYsY");
-			outputManager.writeRecord(3, "GRADED_assignment_sample 3.docx", "");
-			//gyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIxIiwiaWF0IjoxNTkxMTI4MzM0LCJzdWIiOiJKR1JBTSIsImlzcyI6IkJVLU1FVCIsIjEtV2VpZ2h0IjozLCIxLUdyYWRlIjo4NSwiMS1GZWVkYmFjayI6IlRocm93cyBBcnJheUluZGV4T3V0T2ZCb3VuZHNFeGNlcHRpb247IHdhdGNoIG91dCBmb3IgdGhlIEJvb2xlYW4gY29uZGl0aW9uIHRoYXQgY29udHJvbHMgdGhlIGZvciBsb29w4oCZcyBleGVjdXRpb24uIFRoaXMgZm9yIGxvb3AgZXhlY3V0ZXMgb25lIG1vcmUgdGltZSB0aGFuIHlvdSB3b3VsZCB3YW50IGl0IHRvIGJlY2F1c2Ugb2YgdGhlIGdyZWF0ZXIgdGhhbiBvciBlcXVhbCB0byBzaWduLiIsIjItV2VpZ2h0IjozLCIyLUdyYWRlIjoxMDAsIjItRmVlZGJhY2siOiJFeGNlbGxlbnQgd29yay4gUGxlYXNlIG1ha2Ugc3VyZSB0byBpbmNsdWRlIGNvbW1lbnRzIG5leHQgdGltZS4iLCIzLVdlaWdodCI6NCwiMy1HcmFkZSI6OTAsIjMtRmVlZGJhY2siOiJQZXIgdGhlIHByb21wdCwgdGhlIG1ldGhvZCBzaG91bGQgcmV0dXJuIHRoZSBmaXJzdCBlbGVtZW50IGluIHRoZSBhcnJheTsgdXNlIHRoZSBicmVhayBrZXl3b3JkIHRvIGV4aXQgdGhlIGZvciBsb29wIG9uY2UgdGhlIGVsZW1lbnQgaXMgZm91bmQuIiwiQ1BJbmRleGVzIjoiWzEsIDIsIDNdIiwiR3JhZGVNYXBwaW5nIjoiQSsgPSA5N1xuQSAgPSA5NVxuQS0gPSA5M1xuQisgPSA4N1xuQiAgPSA4NVxuQi0gPSA4M1xuQyAgPSA3N1xuRiAgPSA2N1xuIiwiVG90YWxHcmFkZSI6OTEuNX0.eN5wZIQFjhYk5J2tImXFi_I2xQnDuXbpD58cZFWUYsY
-
-			System.out.println("Records written.");
-		} catch (FileNotFoundException e) {
-			e.getMessage();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		//Path directory = Paths.get("/Users/ntadmin/Desktop/tests/run/");
-		RecordManager inputManager = new RecordManager(directory);
-		
-		try {
-			inputManager.createInputStream();
-			inputManager.createRecordListFromFile();
-		
-		} catch (ClassNotFoundException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		Record record = inputManager.retrieveRecord("GRADED_assignment_sample 3.docx");
-		System.out.println(record.getHashString());
-		
-		/*
-		for (Record record: inputManager.getRecordList()) {
-			System.out.println(record);
-		}
-		*/
-			
 	}
 
 }

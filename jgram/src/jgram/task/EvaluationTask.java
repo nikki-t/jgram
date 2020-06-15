@@ -1,12 +1,10 @@
 package jgram.task;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
-import jgram.assessment.Document;
-import jgram.exceptions.InvalidCommentException;
-import jgram.security.Secret;
 import jgram.storage.RecordManager;
 
 /**
@@ -26,9 +24,7 @@ import jgram.storage.RecordManager;
 public class EvaluationTask extends Task {
 	
 	// Instance variable(s)
-	Document document;
-	RecordManager recordManager;
-	int recordID = 0;
+	private RecordManager recordManager;
 	
 	// Constructor(s)
 	public EvaluationTask() {
@@ -62,142 +58,16 @@ public class EvaluationTask extends Task {
 	}
 	
 	/**
-	 * Intent: Display invalid comment or list of invalid comments determined
-	 * from exception thrown by Comment class.
-	 * 
-	 * Precondition1 (Invalid comments): The graded document contains invalid
-	 * comments which can include invalid checkpoints and grade mapping.
-	 * 
-	 * Postcondition1 (Invalid comments display): All invalid comments for
-	 * the assignment are displayed on the console.
-	 * @param e
-	 */
-	private void displayInvalidCommentException(InvalidCommentException e) {
-		
-		// Post1 Invalid comments display
-		String filename = document.getAssignmentName().getFileName().toString();
-		System.out.println(e.getMessage() + " " + filename);
-		
-		// Check if exception has a comment id
-		if (e.getCommentID() != -1) {
-			
-			System.out.println("Please check the following: ");
-			int id = e.getCommentID() + 1;
-			System.out.println("\tComment #" + id);
-		}
-		
-		// Check if exception has a list of invalid comments
-		if (e.getInvalidCommentList() != null) {
-			
-			System.out.println("Please check the following: ");
-			// Display invalid comment numbers
-			for (int id : e.getInvalidCommentList()) {
-				id += 1;
-				System.out.println("\tComment #" + id);
-			}
-		}
-	}
-	
-	/**
-	 * Intent: Evaluate one assignment document by grading available data
-	 * present in the document's comments, encoding the result as a hash
-	 * string and writing the hash string to a file.
-	 * 
-	 * Postcondition1 (Document): A new Document object is created that needs 
-	 * to be graded.
-	 * Postcondition2 (Parse document): Document is parsed for grading data.
-	 * Postcondition3 (Evaluate assignment): Document is evaluated and total
-	 * grade is calculated.
-	 * Postcondition4 (Create graded assignment): A copy of the assignment is 
-	 * created and the results of the graded assignment are appended to the
-	 * end of the assignment copy.
-	 * Postcondition5 (Hash string): An encoded hash string is created
-	 * from the result and stored in a file named 'jgram.dat'.
-	 * Postcondition6 (Handle exceptions): Exceptions are reported to the 
-	 * console and control returns to caller.
-	 * 
-	 * @param path
-	 * 
-	 * @throws IOException
-	 */
-	private void evaluateAssignment(Path path) throws IOException {
-		
-		try {
-			// Post1 Document
-			document = new Document(path);
-			
-			// Post2 Parse document
-			parseDocument(document);
-			
-			// Post3 Evaluate assignment
-			document.calculateResult();
-						
-			// Post4 Create graded assignment
-			document.createGradedAssignment();
-			
-			// Post5 Hash string
-			storeHashString(document);
-			
-			System.out.println("\nGraded Document: " 
-					+ path.getFileName());
-
-		
-		// Post6 Handle exceptions
-		} catch (InvalidCommentException e) {
-			
-			displayInvalidCommentException(e);
-					
-		}
-	}
-	
-	/**
-	 * Intent: Parse document for comments, checkpoints, and a grade mapping.
-	 * 
-	 * Postcondition1 (Comments): Comments are extracted from document.
-	 * Postcondition2 (Grade mapping): Grade mapping is extracted from document.
-	 * Postcondition3 (Checkpoints): Checkpoints are extracted from document.
-	 * 
-	 * @param document Document object
-	 * @throws InvalidCommentException
-	 */
-	private void parseDocument(Document document) throws IOException, 
-			InvalidCommentException {
-		
-		// Post1 Comments
-		document.parseComments();
-		// Test for presence of comments
-		if (document.getCommentList().isEmpty()) {
-			throw new InvalidCommentException("\nERROR: No comments were found "
-					+ "in file");
-		}
-		
-		// Post2 Grade mapping
-		document.parseGradeMapping();
-		// Set default grade mapping if one is not provided in the comments
-		if (document.getGradeMapping().getLimits().isEmpty()) {
-			document.setDefaultGradeMapping();
-		}
-		
-		// Post3 Checkpoints
-		document.parseCheckpoints();
-		// Test for presence of checkpoints
-		if (document.getCheckpointList().isEmpty()) {
-			String message = "\nERROR: No checkpoints detected in file";
-			throw new InvalidCommentException(message);
-		}
-		
-	}
-	
-	/**
 	 * Intent: Evaluate, calculate and display assignment grade.
 	 * 
-	 * Postcondition1 (Document loop): All documents in a directory have been
-	 * iterated on and the task operations have been executed if applicable.
-	 * Postcondition2 (Record Manager): A RecordManager object has been created
-	 * and an output stream has been set to write the record to.
-	 * Postcondition3 (Evaluate each document): Each document is evaluated and a
-	 * grade is calculated and a hash string of encoded results has been created
-	 * and stored.
+	 * Postcondition1 (Preparation): A file list of valid files is created and 
+	 * a RecordManager object is created for writing records.
+	 * Postcondition2 (Create ExecutorService): An ExecutorService object is
+	 * created to handle the execution of a task run as a new thread on each 
+	 * file on up to 5 files at a time.
+	 * Postcondition3 (Evaluate each document): Each document is evaluated in
+	 * a new thread and a grade is calculated and a hash string of encoded 
+	 * results has been created and stored.
 	 * Postcondition4 (Handle exceptions): Exceptions are reported to the 
 	 * console and control returns to caller.
 	 */
@@ -205,31 +75,32 @@ public class EvaluationTask extends Task {
 	public void performTask() {
 		
 		// Notice on overwritten graded files
-		System.out.println("\nNOTE: Any previously graded assignments "
+		System.out.println("\nIMPORTANT: Any previously graded assignments "
 		+ "will be overwritten.");
 		
 		try {
 		
-			// Post1 Document loop
-			createFileList("evaluation");
+			//Post1 Preparation
+			prep();
 			
-			// Return to main menu if file list was not found
-			if (getFileList().isEmpty()) {
-				System.out.println("\nNo Word documents were found.");
-				System.out.println("\n\tExiting to main menu...");
-				return;
-			}
+			// Post2 Create ExecutorService
+			ExecutorService executorService = getExecutorService();
 			
-			// Post2 RecordManager
-			recordManager = new RecordManager(getWorkingDirectory());
-			recordManager.createOutputStream();
-		
+			// Post4 Evaluate each document
 			for (Path path : getFileList()) {
 					
-				// PostCondition2 Evaluate each document
-				evaluateAssignment(path);
+				EvalTaskRun taskRun = new EvalTaskRun(path, recordManager,
+						getSecret());
+				executorService.execute(taskRun);
+				incrementThreadCount();
 				
 			} 
+			
+			// Shut down executor service and block until thread 
+			// execution is complete
+			executorService.shutdown();
+			executorService.awaitTermination(Long.MAX_VALUE, 
+					TimeUnit.NANOSECONDS);
 			
 			System.out.println("\nFINISHED GRADING. Check 'GRADED' directory "
 					+ "for graded assignments.");
@@ -237,56 +108,31 @@ public class EvaluationTask extends Task {
 			// Close object output stream
 			recordManager.getOutputStream().close();
 		
-		// Post7 Handle exceptions
-		} catch (FileNotFoundException e) {
-			// ObjectOutputStream
-			System.out.println("\nERROR: " + e.getMessage());
-			
-		} catch (IOException e) {
-			
-			// Directory stream, File input stream, Files copy, deleteDirectory
-			System.out.println("\nERROR: Could not process files in directory "
-					+ "entered.");
-			System.out.println(e.getMessage());
-		
+		// Post4 Handle exceptions
+		} catch (Exception e) {
+			displayException(e, "Could not grade any assignments.");
 		}
-			
 	}
 	
 	/**
-	 * Intent: Create and store a hash string for tamper detection.
+	 * Intent: Run several operations to prepare for EvaluationTask execution.
 	 * 
-	 * Postcondition1 (Create hash string): A hash string is created that 
-	 * encodes all of the grading result data contained in a document.
-	 * Postcondition2 (Record data): All data needed to create a record
-	 * is retrieved.
-	 * Postcondition3 (Record written): A Record object is created and a record
-	 * is written to 'jgram.dat'.
+	 * Postcondition1 (Create file list): A list of files that need to be 
+	 * evaluated for grading data is created.
+	 * Postcondition2 (Create RecordManager): A RecordManager object has been created
+	 * and an output stream has been set to write the record to.
 	 * 
-	 * @param document
-	 * @throws IOException 
+	 * @throws IOException
 	 */
-	private void storeHashString(Document document) throws IOException {
+	@Override
+	protected void prep() throws IOException {
 		
-		// Post1 Create hash string
-		Secret secret = getSecret();
-		document.createHashString(secret);
+		// Post1 Create file list
+		getDirectoryAndFileList();
 		
-		//  Post2 Record data
-		// Assignment Name
-		Path assignmentPath = document.getAssignmentName();
-		int index = assignmentPath.getNameCount();
-		String assignmentName = "GRADED_" + assignmentPath
-				.getName(index - 1)
-				.toString();
-		
-		// Record ID
-		recordID++;
-		
-		// Post3 Record written
-		recordManager.writeRecord(recordID, assignmentName, 
-				document.getHashString());
+		// Post2 Create RecordManager
+		recordManager = new RecordManager(getWorkingDirectory());
+		recordManager.createOutputStream();
 		
 	}
-
 }

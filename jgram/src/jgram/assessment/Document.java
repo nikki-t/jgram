@@ -528,13 +528,20 @@ public class Document {
 	/**
 	 * Intent: Set default grade mapping for Document and print message to 
 	 * console to notify user.
+	 * 
+	 * Postconidtion1 (Synchronized): All output operations are synchronized
+	 * across executing Threads.
 	 */
 	public void setDefaultGradeMapping() {
 		
-		System.out.println("\nDid not find a grade mapping for assignment:"
-				+ "\n\t" + assignmentPath.getFileName().toString());
-		gradeMapping.setDefaultGradeMapping();
-		System.out.println("Default mapping is set to: \n" + gradeMapping);
+		// Post1 Synchronized
+		synchronized(System.out) {
+			System.out.println("\nDid not find a grade mapping for assignment:"
+					+ "\n\t" + assignmentPath.getFileName().toString());
+			gradeMapping.setDefaultGradeMapping();
+			System.out.println("Default mapping is set to: \n" + gradeMapping);
+		}
+		
 	}
 	
 	public void setGradeMapping(GradeMapping gMap) {

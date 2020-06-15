@@ -26,8 +26,7 @@ public class RecordManagerTest {
 		
 		// Locate test assignment file
 		Path directory = TestUtilities
-				.returnAssignmentPath("eval-task-test.docx")
-				.getParent();
+				.returnAssignmentDir("record/jgram.dat");
 		
 		// Create a ResourceManager object to test
 		RecordManager manager = new RecordManager(directory);
@@ -52,8 +51,7 @@ public class RecordManagerTest {
 		
 		// Locate test assignment file
 		Path directory = TestUtilities
-				.returnAssignmentPath("eval-task-test.docx")
-				.getParent();
+				.returnAssignmentDir("record/jgram.dat");
 		
 		// Create a RecordManager object to test
 		RecordManager manager = new RecordManager(directory);
@@ -75,10 +73,10 @@ public class RecordManagerTest {
 	 */
 	@Test
 	void testCreateRecordListFromFile() {
+		
 		// Locate test assignment file
 		Path directory = TestUtilities
-				.returnAssignmentPath("eval-task-test.docx")
-				.getParent();
+				.returnAssignmentDir("record/jgram.dat");
 		
 		// Write output to dat file to ensure can test input
 		RecordManager outputManager = new RecordManager(directory);
@@ -131,10 +129,10 @@ public class RecordManagerTest {
 	 */
 	@Test
 	void testRetrieveRecord() {
+		
 		// Locate test assignment file
 		Path directory = TestUtilities
-				.returnAssignmentPath("eval-task-test.docx")
-				.getParent();
+				.returnAssignmentDir("record/jgram.dat");
 		
 		// Write output to dat file to ensure test input
 		RecordManager outputManager = new RecordManager(directory);
@@ -183,14 +181,14 @@ public class RecordManagerTest {
 		
 		// Locate test assignment file
 		Path directory = TestUtilities
-				.returnAssignmentPath("eval-task-test.docx")
-				.getParent();
+				.returnAssignmentDir("record/jgram.dat");
 		
 		// Create a RecordManager object to test
 		RecordManager manager = new RecordManager(directory);
 		
 		// Write a Record object
 		try {
+			manager.createOutputStream();
 			manager.writeRecord(2, "GRADED_assignment2.docx", 
 					"fyJhbGciOiJIUzI1NiJ9");
 		} catch (IOException e) {

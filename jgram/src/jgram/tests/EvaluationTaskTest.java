@@ -3,21 +3,62 @@ package jgram.tests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.spy;
 
-import java.io.File;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.junit.jupiter.api.Test;
 
+import jgram.security.Secret;
 import jgram.task.EvaluationTask;
 import jgram.task.Task;
 
 public class EvaluationTaskTest {
+	
+	private EvaluationTask performTask(Path resourceDir) {
+		
+		// Change System.in to point to input
+		InputStream in = new ByteArrayInputStream(resourceDir.toString().getBytes());
+		System.setIn(in);
+
+		// Create new EvaluationTask object
+		Task task = new EvaluationTask();
+		
+		// Mock createFileList
+		task = spy(EvaluationTask.class);
+		try {
+			doNothing().when(task).createFileList();
+		} catch (IOException e) {
+			fail("Could not create mock of createFileList method.");
+		}
+		
+		// Set task secret
+		Secret secret = new Secret("secret");
+		task.setSecret(secret);
+		
+		// Simulate output from Task createFileList method
+		Path path1 = Paths.get(resourceDir.toString(), 
+				"eval-task-test-valid.docx");
+		Path path2 = Paths.get(resourceDir.toString(),
+				"eval-task-test-invalid.docx");
+		List<Path> fileList = new ArrayList<>();
+		fileList.add(path1);
+		fileList.add(path2);
+		task.setFileList(fileList);
+
+		// Perform task
+		task.performTask();
+		
+		return (EvaluationTask) task;
+		
+	}
 	
 	/**
 	 * Intent: Test EvaluationTask.performTask method. Asserts that a 'GRADED'
@@ -29,47 +70,17 @@ public class EvaluationTaskTest {
 	void testPerformTask() {
 		
 		// Locate test assignment file
-		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("eval-task-test.docx");
+		Path resourceDir = TestUtilities
+				.returnAssignmentDir("eval/eval-task-test-valid.docx");
 		
-		// Run performTask method
-		Task task = new EvaluationTask();
-		try {
-			TestUtilities.runPerformTask(task, resourceDocument, "evaluation");
-		} catch (IOException e) {
-			fail("Failed to mock Task.createFileList method.");
-		}
+		// Perform task
+		EvaluationTask task = performTask(resourceDir);
 		
-		// Assert graded directory exists
-		String gradedDirectory = resourceDocument.getParent().toString() + "/GRADED";
-		Path gradedPath = Paths.get(gradedDirectory);
+		// Assert finished executing threads
+		assertTrue(task.getExecutorService().isTerminated());
 		
-		assertTrue(Files.isDirectory(gradedPath));
-		
-		// Assert graded assignment exists
-		String gradedAssignment = gradedDirectory + "/GRADED_eval-task-test.docx";
-		File gradedFile = new File(gradedAssignment);
-		
-		assertTrue(gradedFile.exists());
-		
-		// Assert graded assignment has a results table
-		try {
-			
-			// Get rows of last table
-			List<XWPFTableRow> rows = TestUtilities.createRowsFromTable(gradedFile);
-			
-			// Assert content of first cell in table
-			assertEquals("C#", rows.get(0).getCell(0).getText());
-			
-		} catch (IOException e) {
-			
-			fail("Error retrieving result to test for table.");
-		}
-		
-		// Assert dat file exists
-		Path datPath = Paths.get(gradedPath.toString(), "jgram.dat");
-		File datFile = datPath.toFile();
-		assertTrue(datFile.exists());
+		// Assert expected thread count
+		assertEquals(2, task.getThreadCount());
 	}
 
 }

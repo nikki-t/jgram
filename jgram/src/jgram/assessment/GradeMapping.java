@@ -125,7 +125,7 @@ public class GradeMapping {
 		gradeLetter = gradeLetter.toUpperCase();
 		
 		// Test if input parameters are valid
-		String errorMessage = "ERROR: Invalid grade mapping data encountered.";
+		String errorMessage = "Invalid grade mapping data encountered.";
 		if (gradeLetter == null || gradeLetter.trim().length() == 0) {
 			throw new InvalidGradeMappingException(errorMessage);
 		}

@@ -13,13 +13,11 @@ public class Record implements Serializable {
 	// Class variable(s)
 	private static final long serialVersionUID = 1001;
 	
-	
 	// Instance variable(s)
 	private int id;
 	private String grader = System.getProperty("user.name");
 	private String assignmentName;
 	private String hashString;
-	
 	
 	// Constructor(s)
 	public Record(int inputID, String inputAssignment, String inputHash) {

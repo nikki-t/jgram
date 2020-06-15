@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 import jgram.task.EvaluationTask;
 import jgram.task.NewDocumentTask;
-import jgram.task.TamperTestTask;
+import jgram.task.TamperTask;
 import jgram.task.Task;
 
 public class MainJGRAM {
@@ -73,7 +73,7 @@ public class MainJGRAM {
 				case "3":
 					String tamperSecret = prompt(GET_SECRET, keyboard);
 					System.out.println(SECRET_REMINDER);
-					Task tamperTask = new TamperTestTask(tamperSecret);
+					Task tamperTask = new TamperTask(tamperSecret);
 					tamperTask.performTask();
 					break;
 				
@@ -109,7 +109,7 @@ public class MainJGRAM {
 	private static Task[] createTaskList() {
 		
 	    Task evalTask = new EvaluationTask();
-	    Task tamperTask = new TamperTestTask();
+	    Task tamperTask = new TamperTask();
 	    Task newDocTask = new NewDocumentTask();
 
 	    Task[] taskList = {evalTask, tamperTask, newDocTask};

@@ -1,95 +1,99 @@
 package jgram.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.spy;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import jgram.task.EvaluationTask;
-import jgram.task.TamperTestTask;
+import jgram.security.Secret;
+import jgram.task.TamperTask;
 import jgram.task.Task;
 
 public class TamperTaskTest {
 	
-	/**
-	 * Intent: To run EvaluationTask in order to generate expected jgram.dat
-	 * file.
-	 */
-	private void runEvalTask() {
-		// Run evaluation task to generate proper dat file
-		Path evalDocument = TestUtilities
-				.returnAssignmentPath("tamper-task-test.docx");
+	private TamperTask performTask(Path resourceDir) {
 		
-		// Run performTask method
-		Task evalTask = new EvaluationTask();
+		// Change System.in to point to input
+		InputStream in = new ByteArrayInputStream(resourceDir
+				.getParent()
+				.toString()
+				.getBytes());
+		System.setIn(in);
+		
+		// Create new TamperTask object
+		Task task = new TamperTask();
+		
+		// Mock createFileList
+		task = spy(TamperTask.class);
 		try {
-			TestUtilities.runPerformTask(evalTask, evalDocument, "evaluation");
+			doNothing().when(task).createFileList();
 		} catch (IOException e) {
-			fail("Failed to mock Task.createFileList method.");
+			fail("Could not create mock of createFileList method.");
 		}
-	}
+		
+		// Set task secret
+		Secret secret = new Secret("secret");
+		task.setSecret(secret);
+		
+		// Simulate output from Task createFileList method
+		Path path1 = Paths.get(resourceDir.toString(), 
+				"GRADED_tamper-task-test-valid.docx");
+		Path path2 = Paths.get(resourceDir.toString(),
+				"GRADED_tamper-task-test-invalid.docx");
+		List<Path> fileList = new ArrayList<>();
+		fileList.add(path1);
+		fileList.add(path2);
+		task.setFileList(fileList);
+		
+		/// Perform task
+		task.performTask();
+		
+		return (TamperTask) task;
+}
 	
 	/**
-	 * Intent: Test TamperTaskTest.performTask method. Asserts that output of
-	 * report.txt file contains: Filename, Tamper Stauts, Grade Mapping, and 
-	 * Result Table.
+	 * Intent: Test TamperTaskTest.performTask method. Asserts that 'jgram.dat'
+	 * exists, 'report.txt' exists, and that 2 threads were executed and
+	 * terminated.
 	 */
 	@Test
 	void testPerformTask() {
+				
+		// Locate test assignment file
+		Path resourceDir = TestUtilities
+				.returnAssignmentDir("tamper/GRADED/"
+						+ "GRADED_tamper-task-test-valid.docx");
 		
-		// Run evaluation task to generate proper dat file
-		runEvalTask();
-		
-		// Locate graded test assignment file
-		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("/GRADED/GRADED_tamper-task-test.docx");
-		
-		// Run performTask method
-		Task tamperTask = new TamperTestTask();
-		try {
-			TestUtilities.runPerformTask(tamperTask, resourceDocument, "tamper");
-		} catch (IOException e) {
-			fail("Failed to mock Task.createFileList method.");
-		}
+		// Perform task
+		TamperTask task = performTask(resourceDir);
 		
 		// Assert dat file exists
-		Path datPath = Paths.get(resourceDocument.getParent().toString(), "jgram.dat");
+		Path datPath = Paths.get(resourceDir.toString(), "jgram.dat");
 		File datFile = datPath.toFile();
 		assertTrue(datFile.exists());
 		
 		// Assert 'report.txt' exists
-		String reportFileString = resourceDocument
-				.getParent()
-				.toString() 
-				+ "/report.txt";
+		String reportFileString = resourceDir.toString() + "/report.txt";
 		File reportFile = new File(reportFileString);
-		
 		assertTrue(reportFile.exists());
 		
-		// Assert 'report.txt' contains key report sections
-		try {
-			// Read entire contents of report.txt
-			Path reportFilePath = reportFile.toPath();
-			byte[] encoded = Files.readAllBytes(reportFilePath);
-			String report = new String(encoded, StandardCharsets.UTF_8);
-			
-			// Assert key report sections exist in report.txt
-			assertTrue(report.contains("\nFilename: GRADED_tamper-task-test.docx\n"));
-			assertTrue(report.contains("\nTamper Status: \n\tPASSED"));
-			assertTrue(report.contains("\nGrade Mapping: \n"));
-			assertTrue(report.contains("\nResult Table: \n"));
-			
-		} catch (IOException e) {
-			fail("Could not read report.txt.");
-		}
+		// Assert finished executing threads
+		assertTrue(task.getExecutorService().isTerminated());
+		
+		// Assert expected thread count
+		assertEquals(2, task.getThreadCount());
 		
 	}
-
 }
