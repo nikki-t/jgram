@@ -5,10 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +14,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.poi.xwpf.usermodel.XWPFComment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
@@ -77,7 +75,6 @@ public class Document {
 	private List<Checkpoint> checkpointList;
 	private GradeMapping gradeMapping;
 	private Result result;
-	private String hashString;
 	
 	private XWPFTable table;;
 	
@@ -115,6 +112,9 @@ public class Document {
 		// Post2 Hash result
 		result = justInTimeEval.evaluate();
 		
+		// Post3 Set assignment name and student name for Result
+		result.setAssignmentName(assignmentPath.getFileName().toString());
+		result.extractStudentName();
 		
 	}
 	
@@ -125,33 +125,30 @@ public class Document {
 	 * Precondition1 (Assignment path): The assignment path has been identified
 	 * by the user.
 	 * 
-	 * Postcondition1 (Copied): The file found at the assignment path has been
-	 * copied to a new file located in a directory labeled 'GRADED' inside
-	 * original file's parent directory. Any previously graded assignments
-	 * will be overwritten.
+	 * Postcondition1 (Target file): The target file is created.
+	 * Postcondition2 (Copy): The file found at the assignment path is copied to
+	 * the target file.
+	 * Postcondition3 (Return path): The path representation of the target file
+	 * is returned.
 	 * 
 	 * @return Path object
 	 * @throws IOException
 	 */
 	private Path copyFile() throws IOException {
 		
-		// Define and create target directory
+		// Post1 Target file
 		String targetDirectory = assignmentPath.getParent().toString() 
 				+ "/GRADED";
-		Path pathTargetDirectory = Paths.get(targetDirectory);
+		String targetFile =  "/GRADED_" + assignmentPath.getFileName()
+			.toString();
+		File target = new File(targetDirectory + targetFile);
 		
-		// Define and create copy of assignment file
-		String targetFile =  pathTargetDirectory.toString() 
-				+ "/GRADED_" 
-				+ assignmentPath.getFileName().toString();
+		// Post2 Copy
+		File original = assignmentPath.toFile();
+		FileUtils.copyFile(original, target);
 		
-		Path pathTarget = Paths.get(targetFile);
-		
-		Files.copy(assignmentPath, pathTarget, 
-				StandardCopyOption.REPLACE_EXISTING);
-		
-		// Post1 Copied
-		return pathTarget;
+		// Post3 Return path
+		return target.toPath();
 		
 	}
 	
@@ -282,10 +279,6 @@ public class Document {
 	
 	public GradeMapping getGradeMapping() {
 		return gradeMapping;
-	}
-	
-	public String getHashString() {
-		return hashString;
 	}
 	
 	public Result getResult() {
@@ -482,6 +475,13 @@ public class Document {
 	}
 	
 	/**
+	 * Intent: Set assignmentPath reference.
+	 */
+	public void setAssignmentPath(Path path) {
+		assignmentPath = path;
+	}
+	
+	/**
 	 * Intent: Set the cell width for each cell in the table instance variable.
 	 */
 	private void setCellWidth() {
@@ -548,12 +548,8 @@ public class Document {
 		gradeMapping = gMap;
 	}
 	
-	public void setHashString(String hString) {
-		hashString = hString;
-	}
-	
-	public void setResult(Result calculatedResult) {
-		result = calculatedResult;
+	public void setResult(Result inputResult) {
+		result = inputResult;
 	}
 	
 	/**

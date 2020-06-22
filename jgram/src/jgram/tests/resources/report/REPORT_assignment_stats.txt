@@ -1,0 +1,9 @@
+Assignment Stats Report
+
+Assignment Title                Count   Minimum   Maximum   Average
+Assignment 1: Array Basics      3       82.0      94.2      89.23  
+Assignment 2: Loop Basics       3       82.0      94.2      89.23  
+Assignment 3: Conditional Basics  3       82.0      94.2      89.23  
+Tamper Task Test                2       93.68     93.68     93.68  
+Eval Task Test                  1       92.5      92.5      92.5   
+Record Manager Test             1       92.5      92.5      92.5   

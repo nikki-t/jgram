@@ -11,14 +11,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import jgram.security.Secret;
+import jgram.storage.Assignment;
+import jgram.storage.RecordManager;
 import jgram.task.EvaluationTask;
-import jgram.task.Task;
 
 public class EvaluationTaskTest {
 	
@@ -29,19 +31,20 @@ public class EvaluationTaskTest {
 		System.setIn(in);
 
 		// Create new EvaluationTask object
-		Task task = new EvaluationTask();
+		EvaluationTask evalTask = new EvaluationTask();
 		
-		// Mock createFileList
-		task = spy(EvaluationTask.class);
+		// Mock createFileList and createAssignment
+		evalTask = spy(EvaluationTask.class);
 		try {
-			doNothing().when(task).createFileList();
+			doNothing().when(evalTask).prep();
 		} catch (IOException e) {
-			fail("Could not create mock of createFileList method.");
+			fail("Could not create mock of createFileList or "
+					+ "retreiveAssignmentTitle method.");
 		}
 		
 		// Set task secret
 		Secret secret = new Secret("secret");
-		task.setSecret(secret);
+		evalTask.setSecret(secret);
 		
 		// Simulate output from Task createFileList method
 		Path path1 = Paths.get(resourceDir.toString(), 
@@ -51,12 +54,52 @@ public class EvaluationTaskTest {
 		List<Path> fileList = new ArrayList<>();
 		fileList.add(path1);
 		fileList.add(path2);
-		task.setFileList(fileList);
+		evalTask.setFileList(fileList);
+		
+		// Set Assignment
+		Assignment assignment = new Assignment("testUser", "Eval Task Test",
+				"/jgram/test/");
+		evalTask.setAssignment(assignment);
+		
+		// Set Record Manager (including test database)
+		RecordManager rm = new RecordManager(assignment);
+		String dbPath = "jdbc:sqlite:" 
+				+ TestUtilities.returnPath("jgramTest.db").toString();
+		rm.setURL(dbPath);
+		evalTask.setRecordManager(rm);
 
 		// Perform task
-		task.performTask();
+		evalTask.performTask();
 		
-		return (EvaluationTask) task;
+		return evalTask;
+		
+	}
+	
+	/**
+	 * Intent: Retrieve result rows of evaluation task test.
+	 * 
+	 * @return
+	 */
+	private ArrayList<String[]> retrieveRows() {
+		
+		// RecordManager
+		RecordManager rm = new RecordManager();
+		String dbPath = "jdbc:sqlite:" 
+				+ TestUtilities.returnPath("jgramTest.db").toString();
+		rm.setURL(dbPath);
+		
+		// Select all students from assignment
+		ArrayList<String[]> rows = new ArrayList<>();
+		try {
+			rm.openConnection();
+			rows = rm.selectAllStudents("Eval Task Test");
+			rm.closeConnection();
+		
+		} catch (SQLException e1) {
+			fail("Could not fetch assignment grading data for comparison.");
+		}
+		
+		return rows;
 		
 	}
 	
@@ -81,6 +124,21 @@ public class EvaluationTaskTest {
 		
 		// Assert expected thread count
 		assertEquals(2, task.getThreadCount());
+		
+		// Retrieve rows
+		ArrayList<String[]> rows = retrieveRows();
+		
+		// Assert JGRAM database data
+		assertEquals("testUser", rows.get(0)[0]);
+		assertEquals("Eval Task Test", rows.get(0)[1]);
+		assertEquals("eval-task-test-valid.docx", rows.get(0)[2]);
+		assertEquals("eval-task-test-valid.docx", rows.get(0)[3]);
+		assertEquals("eval-task-test-valid.docx", rows.get(0)[4]);
+		assertEquals("92.5", rows.get(0)[5]);
+		assertEquals("3", rows.get(0)[6]);
+		assertEquals("85", rows.get(0)[7]);
+		assertEquals("Okay job", rows.get(0)[8]);
+		
 	}
 
 }

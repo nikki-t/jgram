@@ -19,7 +19,7 @@ public class NewDocTaskRunTest {
 		
 		// Locate test assignment file
 		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("newdoc/new-doc-test-invalid.docx");		
+				.returnPath("newdoc/new-doc-test-invalid.docx");		
 		
 		// Create NewDocumentTask object
 		NewDocTaskRun taskRun = new NewDocTaskRun(resourceDocument);
@@ -48,7 +48,7 @@ public class NewDocTaskRunTest {
 		
 		// Locate test assignment file
 		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("newdoc/new-doc-test-valid.docx");		
+				.returnPath("newdoc/new-doc-test-valid.docx");		
 		
 		/// Create NewDocumentTask object
 		NewDocTaskRun taskRun = new NewDocTaskRun(resourceDocument);

@@ -4,204 +4,260 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import jgram.storage.Record;
+import jgram.assessment.Checkpoint;
+import jgram.assessment.GradeMapping;
+import jgram.assessment.Result;
+import jgram.exceptions.InvalidCheckpointException;
+import jgram.storage.Assignment;
 import jgram.storage.RecordManager;
 
 public class RecordManagerTest {
 	
-	/**
-	 * Intent: test createInputStream method of RecordManager class.
-	 */
-	@Test
-	void testCreateInputStream() {
+	private Assignment createAssignment() throws InvalidCheckpointException {
+				
+		// Create Result
+		// Checkpoints
+		List<Checkpoint> checkpointList = new ArrayList<>();
+		checkpointList.add(new Checkpoint(3, 85, "Okay job", 1));
+		checkpointList.add(new Checkpoint(3, 90, "Good job", 2));
+		checkpointList.add(new Checkpoint(4, 100, "Excellent job", 3));
 		
-		// Locate test assignment file
-		Path directory = TestUtilities
-				.returnAssignmentDir("record/jgram.dat");
+		// Total Grade
+		float totalGrade = (float) 92.5;
 		
-		// Create a ResourceManager object to test
-		RecordManager manager = new RecordManager(directory);
+		// Hash String
+		String hashString = "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIxIiwiaWF0IjoxNTkyNTI0MzA5LCJzdWIiOiJKR1JBTSIsImlzcyI6IkJVLU1FVCIsIjEtV2VpZ2h0IjozLCIxLUdyYWRlIjo4NSwiMS1GZWVkYmFjayI6Ik9rYXkgam9iIiwiMi1XZWlnaHQiOjMsIjItR3JhZGUiOjkwLCIyLUZlZWRiYWNrIjoiR29vZCBqb2IiLCIzLVdlaWdodCI6NCwiMy1HcmFkZSI6MTAwLCIzLUZlZWRiYWNrIjoiRXhjZWxsZW50IGpvYiIsIkNQSW5kZXhlcyI6IlsxLCAyLCAzXSIsIkdyYWRlTWFwcGluZyI6IkErID0gOTdcbkEgID0gOTVcbkEtID0gOTNcbkIrID0gODdcbkIgID0gODVcbkItID0gODNcbkMgID0gNzdcbkYgID0gNjdcbiIsIlRvdGFsR3JhZGUiOjkyLjV9.ABHM5z_0x8egMEYRCNBt-H4d8hxBZv_DaQowyrJo0w0";
 		
-		// Create an input stream
-		try {
-			manager.createInputStream();
-		} catch (IOException e) {
-			fail("Failed to create input stream.");
-		}
+		// Assignment Name
+		String assignmentName = "last_first_a1.docx";
 		
-		// Assert input stream has been created
-		assertTrue(manager.getInputStream() instanceof ObjectInputStream);
+		Result result = new Result(checkpointList, totalGrade);
+		result.setHashString(hashString);
+		result.setAssignmentName(assignmentName);
+		result.extractStudentName();
 		
-	}
-	
-	/**
-	 * Intent: test createOutputStream method of RecordManager class.
-	 */
-	@Test
-	void testCreateOutputStream() {
+		// Create GradeMapping
+		GradeMapping gm = new GradeMapping();
+		gm.setDefaultGradeMapping();
 		
-		// Locate test assignment file
-		Path directory = TestUtilities
-				.returnAssignmentDir("record/jgram.dat");
+		// Create Assignment
+		Assignment assignment = new Assignment("testUser", 
+				"Record Manager Test", "/jgram/test/");
+		assignment.addResult(result);
+		assignment.setGradeMapping(gm);
 		
-		// Create a RecordManager object to test
-		RecordManager manager = new RecordManager(directory);
-		
-		// Create an input stream
-		try {
-			manager.createOutputStream();
-		} catch (IOException e) {
-			fail("Failed to create input stream.");
-		}
-		
-		// Assert input stream has been created
-		assertTrue(manager.getOutputStream() instanceof ObjectOutputStream);
+		return assignment;
 		
 	}
 	
 	/**
-	 * Intent: Test createResultList method of RecordManager class.
+	 * Intent: Test the createPathHashMap method of the RecordManager class.
 	 */
 	@Test
-	void testCreateRecordListFromFile() {
+	void testCreatePathHashMap() {
 		
-		// Locate test assignment file
-		Path directory = TestUtilities
-				.returnAssignmentDir("record/jgram.dat");
+		// Write assignment data
+		RecordManager rm = writeAssignmentData();
 		
-		// Write output to dat file to ensure can test input
-		RecordManager outputManager = new RecordManager(directory);
+		// Create file map
+		Path testPath = TestUtilities.returnPath("/record/last_first_a1.docx");
+		Map<String, Path> fileMap = new HashMap<>();
+		fileMap.put("last_first_a1.docx", testPath);
 		
+		// Retrieve hash string for assignment
+		Map<Path, String> pathHashMap = new HashMap<>();
 		try {
-			outputManager.createOutputStream();
-			outputManager.writeRecord(1, "GRADED_assignment1.docx", 
-					"eyJhbGciOiJIUzI1NiJ9");
-			outputManager.writeRecord(2, "GRADED_assignment2.docx", 
-					"fyJhbGciOiJIUzI1NiJ9");
-			outputManager.writeRecord(3, "GRADED_assignment3.docx", 
-					"gyJhbGciOiJIUzI1NiJ9.");
-
-		} catch (IOException e) {
-			fail("Could not write .dat file.");
-		} 
-		
-		// Create a ResourceManager object to test for input
-		RecordManager inputManager = new RecordManager(directory);
-		
-		// Create record list
-		try {
-			inputManager.createInputStream();
-			inputManager.createRecordListFromFile();
-		
-		} catch (ClassNotFoundException | IOException e) {
-			fail("Could not create a record list.");
+			rm.openConnection();
+			pathHashMap = rm.createPathHashMap(fileMap);
+			rm.closeConnection();
+		} catch (SQLException e) {
+			fail("Could not retrieve hash string");
 		}
 		
-		// Assert size of record list
-		assertEquals(3, inputManager.getRecordList().size());
-		
-		// Create expected String representation of a Record object
-		String grader = System.getProperty("user.name");
-		String expected = "ID: 1, Grader: " 
-				+ grader 
-				+ ", Assignment Name: GRADED_assignment1.docx,"
-				+ " Hash: eyJhbGciOiJIUzI1NiJ9";
-		
-		// Assert expected string equals first record in the record list
-		assertTrue(expected.equals(inputManager
-				.getRecordList()
-				.get(0)
-				.toString()));
+		// Assert hash string
+		String hashString = pathHashMap.get(testPath);
+		String expected = "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIxIiwiaWF0IjoxNTkyNTI0MzA5LCJzdWIiOiJKR1JBTSIsImlzcyI6IkJVLU1FVCIsIjEtV2VpZ2h0IjozLCIxLUdyYWRlIjo4NSwiMS1GZWVkYmFjayI6Ik9rYXkgam9iIiwiMi1XZWlnaHQiOjMsIjItR3JhZGUiOjkwLCIyLUZlZWRiYWNrIjoiR29vZCBqb2IiLCIzLVdlaWdodCI6NCwiMy1HcmFkZSI6MTAwLCIzLUZlZWRiYWNrIjoiRXhjZWxsZW50IGpvYiIsIkNQSW5kZXhlcyI6IlsxLCAyLCAzXSIsIkdyYWRlTWFwcGluZyI6IkErID0gOTdcbkEgID0gOTVcbkEtID0gOTNcbkIrID0gODdcbkIgID0gODVcbkItID0gODNcbkMgID0gNzdcbkYgID0gNjdcbiIsIlRvdGFsR3JhZGUiOjkyLjV9.ABHM5z_0x8egMEYRCNBt-H4d8hxBZv_DaQowyrJo0w0";
+		assertTrue(expected.equals(hashString));
 		
 	}
 	
 	/**
-	 * Intent: Test retrieveRecord method of RecordManager class.
+	 * Intent; Test the selectAllStudents method of the RecordManager class.
 	 */
 	@Test
-	void testRetrieveRecord() {
+	void testSelectAllStudents() {
 		
-		// Locate test assignment file
-		Path directory = TestUtilities
-				.returnAssignmentDir("record/jgram.dat");
+		// RecordManager
+		RecordManager rm = new RecordManager();
+		String dbPath = "jdbc:sqlite:" 
+				+ TestUtilities.returnPath("jgramTest.db").toString();
+		rm.setURL(dbPath);
 		
-		// Write output to dat file to ensure test input
-		RecordManager outputManager = new RecordManager(directory);
-		
+		// Select all students from assignment
+		ArrayList<String[]> rows = new ArrayList<>();
 		try {
-			outputManager.createOutputStream();
-			outputManager.writeRecord(1, "GRADED_assignment1.docx", 
-					"eyJhbGciOiJIUzI1NiJ9");
-			outputManager.writeRecord(2, "GRADED_assignment2.docx", 
-					"fyJhbGciOiJIUzI1NiJ9");
-			outputManager.writeRecord(3, "GRADED_assignment3.docx", 
-					"gyJhbGciOiJIUzI1NiJ9.");
-
-		} catch (IOException e) {
-			fail("Could not write .dat file.");
-		} 
+			rm.openConnection();
+			rows = rm.selectAllStudents("Assignment 1: Array Basics");
+			rm.closeConnection();
 		
-		// Create a ResourceManager object to test for input
-		RecordManager inputManager = new RecordManager(directory);
-		
-		// Create record list and attempt to retrieve a record from it
-		Record record = null;
-		try {
-			inputManager.createInputStream();
-			inputManager.createRecordListFromFile();
-			record = inputManager.retrieveRecord("GRADED_assignment2.docx");
-		
-		} catch (ClassNotFoundException | IOException e) {
-			fail("Could not create a record list.");
+		} catch (SQLException e1) {
+			fail("Could not fetch assignment grading data for comparison.");
 		}
 		
-		// Create expected String representation of a Record object
-		String grader = System.getProperty("user.name");
-		String expected = "ID: 2, Grader: " 
-				+ grader 
-				+ ", Assignment Name: GRADED_assignment2.docx,"
-				+ " Hash: fyJhbGciOiJIUzI1NiJ9";
-		
-		// Assert expected String equals Record string
-		assertTrue(expected.equals(record.toString()));
+		// Assert first row data
+		assertEquals("testGrader", rows.get(0)[0]);
+		assertEquals("Assignment 1: Array Basics", rows.get(0)[1]);
+		assertEquals("olive", rows.get(0)[2]);
+		assertEquals("griffs", rows.get(0)[3]);
+		assertEquals("griffs_olive_a1.docx", rows.get(0)[4]);
+		assertEquals("91.5", rows.get(0)[5]);
+		assertEquals("3", rows.get(0)[6]);
+		assertEquals("85", rows.get(0)[7]);
+		assertEquals("Okay work.", rows.get(0)[8]);
 		
 	}
 	
+	/**
+	 * Intent; Test the selectAssginmentStats method of the RecordManager class.
+	 */
 	@Test
-	void testWriteRecord() {
+	void testSelectAssignmentStats() {
 		
-		// Locate test assignment file
-		Path directory = TestUtilities
-				.returnAssignmentDir("record/jgram.dat");
+		// RecordManager
+		RecordManager rm = new RecordManager();
+		String dbPath = "jdbc:sqlite:" 
+				+ TestUtilities.returnPath("jgramTest.db").toString();
+		rm.setURL(dbPath);
 		
-		// Create a RecordManager object to test
-		RecordManager manager = new RecordManager(directory);
-		
-		// Write a Record object
+		// Select all students from assignment
+		ArrayList<String[]> rows = new ArrayList<>();
 		try {
-			manager.createOutputStream();
-			manager.writeRecord(2, "GRADED_assignment2.docx", 
-					"fyJhbGciOiJIUzI1NiJ9");
-		} catch (IOException e) {
-			fail("Could not write to .dat file");
+			rm.openConnection();
+			rows = rm.selectAssignmentStats();
+			rm.closeConnection();
+		
+		} catch (SQLException e1) {
+			fail("Could not fetch assignment grading data for comparison.");
 		}
 		
-		// Create a representation of the .dat file
-		Path datFilePath = Paths.get(directory.toString(), "jgram.dat");
-		File datFile = new File (datFilePath.toString());
+		// Assert first row data
+		assertEquals("Assignment 1: Array Basics", rows.get(0)[0]);
+		assertEquals("3", rows.get(0)[1]);
+		assertEquals("82.0", rows.get(0)[2]);
+		assertEquals("94.2", rows.get(0)[3]);
+		assertEquals("89.23", rows.get(0)[4]);
 		
-		// Assert dat file exists
-		assertTrue(datFile.exists());
+	}
+	
+	/**
+	 * Intent; Test the selectStudentAssignments method of the RecordManager 
+	 * class.
+	 */
+	@Test
+	void testSelectStudentAssignments() {
 		
+		// RecordManager
+		RecordManager rm = new RecordManager();
+		String dbPath = "jdbc:sqlite:" 
+				+ TestUtilities.returnPath("jgramTest.db").toString();
+		rm.setURL(dbPath);
+		
+		// Student name
+		String[] name = {"rose", "griffs"};
+		
+		// Select all students from assignment
+		ArrayList<String[]> rows = new ArrayList<>();
+		try {
+			rm.openConnection();
+			rows = rm.selectStudentAssignments(name);
+			rm.closeConnection();
+		
+		} catch (SQLException e1) {
+			fail("Could not fetch assignment grading data for comparison.");
+		}
+		
+		// Assert first row data
+		assertEquals("testGrader", rows.get(0)[0]);
+		assertEquals("Assignment 1: Array Basics", rows.get(0)[1]);
+		assertEquals("rose", rows.get(0)[2]);
+		assertEquals("griffs", rows.get(0)[3]);
+		assertEquals("griffs_rose_a1.docx", rows.get(0)[4]);
+		assertEquals("82.0", rows.get(0)[5]);
+		assertEquals("3", rows.get(0)[6]);
+		assertEquals("70", rows.get(0)[7]);
+		assertEquals("Poor work.", rows.get(0)[8]);
+		
+	}
+	
+	/**
+	 * Intent: Test writeAssignmentData method of RecordManager class.
+	 */
+	@Test
+	void testWriteAssignmentData() {
+		
+		// Write assignment data
+		RecordManager rm = writeAssignmentData();
+		
+		// Select all students from assignment
+		ArrayList<String[]> rows = new ArrayList<>();
+		try {
+			rm.openConnection();
+			rows = rm.selectAllStudents("Record Manager Test");
+			rm.closeConnection();
+		} catch (SQLException e) {
+			fail("Could not fetch assignment grading data for comparison.");
+		}
+		
+		// Assert first row data
+		assertEquals("testUser", rows.get(0)[0]);
+		assertEquals("Record Manager Test", rows.get(0)[1]);
+		assertEquals("first", rows.get(0)[2]);
+		assertEquals("last", rows.get(0)[3]);
+		assertEquals("last_first_a1.docx", rows.get(0)[4]);
+		assertEquals("92.5", rows.get(0)[5]);
+		assertEquals("3", rows.get(0)[6]);
+		assertEquals("85", rows.get(0)[7]);
+		assertEquals("Okay job", rows.get(0)[8]);		
+		
+	}
+	
+	private RecordManager writeAssignmentData() {
+		
+		// Create an Assignment object with grading data
+		Assignment assignment = null;
+		try {
+			 assignment = createAssignment();
+		} catch (InvalidCheckpointException e) {
+			fail("Could not create a checkpoint list");
+		}
+		
+		// Create a RecordManager object
+		RecordManager rm = new RecordManager(assignment);
+		
+		// Set DB URL
+		String dbPath = "jdbc:sqlite:" 
+				+ TestUtilities.returnPath("jgramTest.db").toString();
+		rm.setURL(dbPath);
+		
+		// Write assignment data
+		try {
+			rm.openConnection();
+			rm.writeAssignmentData();
+			rm.closeConnection();
+		} catch (SQLException e) {
+			fail("Could not write assignment data");
+		}
+		
+		return rm;
 	}
 
 }

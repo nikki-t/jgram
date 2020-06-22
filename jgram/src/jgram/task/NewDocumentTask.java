@@ -2,6 +2,7 @@ package jgram.task;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -10,6 +11,9 @@ public class NewDocumentTask extends Task {
 	// Constructor(s)
 	public NewDocumentTask() {
 		super();
+	}
+	public NewDocumentTask(Scanner inputKeyboard) {
+		super(inputKeyboard);
 	}
 	
 	/**
@@ -87,9 +91,11 @@ public class NewDocumentTask extends Task {
 	 * @throws IOException
 	 */
 	@Override
-	protected void prep() throws IOException {
+	public void prep() throws IOException {
 		
 		// Post1 Create file list
+		System.out.println("\nChoose a directory that contains Word documents "
+				+ "that require validation.");
 		getDirectoryAndFileList();
 	}
 	

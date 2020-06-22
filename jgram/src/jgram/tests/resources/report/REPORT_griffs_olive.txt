@@ -1,0 +1,12 @@
+olive griffs Assignment Report
+
+Grader       Assignment Title                Student First   Student Last   Assignment Name                  Total Grade   Weight   Grade   Feedback
+testGrader   Assignment 1: Array Basics      olive           griffs         griffs_olive_a1.docx             91.5          3        85      Okay work.
+testGrader   Assignment 1: Array Basics      olive           griffs         griffs_olive_a1.docx             91.5          3        100     Excellent work.
+testGrader   Assignment 1: Array Basics      olive           griffs         griffs_olive_a1.docx             91.5          4        90      Good work.
+testGrader   Assignment 2: Loop Basics       olive           griffs         griffs_olive_a1.docx             91.5          3        85      Okay work.
+testGrader   Assignment 2: Loop Basics       olive           griffs         griffs_olive_a1.docx             91.5          3        100     Excellent work.
+testGrader   Assignment 2: Loop Basics       olive           griffs         griffs_olive_a1.docx             91.5          4        90      Good work.
+testGrader   Assignment 3: Conditional Basics  olive           griffs         griffs_olive_a1.docx             91.5          3        85      Okay work.
+testGrader   Assignment 3: Conditional Basics  olive           griffs         griffs_olive_a1.docx             91.5          3        100     Excellent work.
+testGrader   Assignment 3: Conditional Basics  olive           griffs         griffs_olive_a1.docx             91.5          4        90      Good work.

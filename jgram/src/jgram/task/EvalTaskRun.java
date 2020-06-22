@@ -6,20 +6,22 @@ import java.nio.file.Path;
 import jgram.assessment.Document;
 import jgram.exceptions.InvalidCommentException;
 import jgram.security.Secret;
-import jgram.storage.RecordManager;
+import jgram.storage.Assignment;
 
 public class EvalTaskRun extends TaskRun {
 	
 	// Class variable(s)
-	private static int recordID = 0;
+	private static Assignment assignment;
+	private static int docNumber = 0;
 	
 	// Instance variable(s)
-	private Document document;
+	private Document document;	
 
-	public EvalTaskRun(Path inputPath, RecordManager inputRM, 
+	public EvalTaskRun(Assignment inputAssignment, Path inputPath, 
 			Secret inputSecret) {
 		
-		super(inputPath, inputRM, inputSecret);
+		super(inputPath, inputSecret);
+		assignment = inputAssignment;
 	}
 	
 	/**
@@ -87,10 +89,13 @@ public class EvalTaskRun extends TaskRun {
 		// Post1 Synchronized
 		synchronized(System.out) {
 			// Post2 Error message
-			System.out.println("\nERROR: " + e.getMessage());
+			System.out.println("\nERROR: " + e.getMessage());	
 			
 			// Post3 Assignment name
-			String filename = document.getAssignmentName().getFileName().toString();
+			String filename = document
+					.getAssignmentName()
+					.getFileName()
+					.toString();
 			
 			// Post4 Update user
 			System.out.println("\n\tCould not grade: " + filename);
@@ -111,8 +116,8 @@ public class EvalTaskRun extends TaskRun {
 	 * Postcondition4 (Create graded assignment): A copy of the assignment is 
 	 * created and the results of the graded assignment are appended to the
 	 * end of the assignment copy.
-	 * Postcondition5 (Hash string): An encoded hash string is created
-	 * from the result and stored in a file named 'jgram.dat'.
+	 * Postcondition5 (Store result data): The grading result and grade mapping
+	 * is stored so that it may be saved as a later time.
 	 * Postcondition6 (Handle exceptions): Exceptions are reported to the 
 	 * console and control returns to caller.
 	 */
@@ -125,7 +130,7 @@ public class EvalTaskRun extends TaskRun {
 			document = new Document(getPath());
 			
 			// Post2 Parse document
-			parseDocument(document);
+			parseDocument();
 			
 			// Post3 Evaluate assignment
 			document.calculateResult();
@@ -133,9 +138,8 @@ public class EvalTaskRun extends TaskRun {
 			// Post4 Create graded assignment
 			document.createGradedAssignment();
 			
-			// Post5 Hash string
-			storeHashString(document);
-			
+			// Post5 Store result data
+			storeResult();
 		
 		// Post6 Handle exceptions
 		} catch (IOException e) {
@@ -157,7 +161,7 @@ public class EvalTaskRun extends TaskRun {
 	 * @param document Document object
 	 * @throws InvalidCommentException
 	 */
-	private void parseDocument(Document document) throws IOException, 
+	private void parseDocument() throws IOException, 
 			InvalidCommentException {
 		
 		// Post1 Comments
@@ -186,48 +190,53 @@ public class EvalTaskRun extends TaskRun {
 	}
 	
 	/**
+	 * Intent: Reset document number class variable to 0.
+	 */
+	public void resetDocNumber() {
+		docNumber = 0;
+	}
+	
+	/**
 	 * Intent: Create and store a hash string for tamper detection.
 	 * 
 	 * Postcondition1 (Create hash string): A hash string is created that 
 	 * encodes all of the grading result data contained in a document.
-	 * Postcondition2 (Record data): All data needed to create a record
-	 * is retrieved.
-	 * Postconidtion3 (Synchronized): All output operations are synchronized
-	 * across executing Threads.
-	 * Postcondition4 (Record written): A Record object is created and a record
-	 * is written to 'jgram.dat'.
+	 * Postcondition2 (Assignment data): Result and grade mapping assignment
+	 * data is stored so that it may be saved to the JGRAM database at a later 
+	 * time. It is synchronized on the assignment object so that only one Thread
+	 * modifies the Assignment at a time.
+	 * Postcondition3 (Document number): The document number is incremented 
+	 * to track the number of assignments processed.
+	 * Postcondition4 (Grade mapping): A grade mapping is saved from the first
+	 * document. An assignment only has one grade mapping so no further mappings
+	 * need to be considered.
+	 * Postcondition5 (Notify user): The user is notified that the current 
+	 * result has been graded on the console.
 	 * 
 	 * @param document
 	 * @throws IOException 
 	 */
-	private void storeHashString(Document document) 
+	private void storeResult() 
 			throws IOException {
 		
+				
 		// Post1 Create hash string
 		document.createHashString(getSecret());
 		
-		// Post2 Record data
-		
-		// Assignment Name
-		Path assignmentPath = document.getAssignmentName();
-		int index = assignmentPath.getNameCount();
-		String assignmentName = "GRADED_" + assignmentPath
-				.getName(index - 1)
-				.toString();
-		
-		// Post3 Synchronized
-		synchronized(getRecordManager().getOutputStream()) {
+		// Post2 Assignment data synchronized
+		synchronized(assignment) {
 			
-			// Record ID
-			recordID++;
+			// Post3 Document number
+			docNumber++;
 			
-			// Post4 Record written
-			getRecordManager().writeRecord(recordID, assignmentName, 
-					document.getHashString());
-			
-			System.out.println("\nGraded Document: " + getPath().getFileName());
+			assignment.addResult(document.getResult());
+			// Post4 Grade mapping
+			if (docNumber == 1) {
+				assignment.setGradeMapping(document.getGradeMapping());
+			}
 		}
 		
+		//Post5 Notify user
+		System.out.println("\nGraded Document: " + getPath().getFileName());
 	}
-
 }

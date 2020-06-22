@@ -36,7 +36,8 @@ public class TaskTest {
 		
 		// Get working directory
 		Scanner keyboard = new Scanner(System.in);
-		task.getDirectory(keyboard);
+		task.setKeyboard(keyboard);
+		task.getDirectory();
 		
 		// Run createFileList method
 		try {
@@ -79,7 +80,8 @@ public class TaskTest {
 		
 		// Run getDirectory method
 		Scanner keyboard = new Scanner(System.in);
-		task.getDirectory(keyboard);
+		task.setKeyboard(keyboard);
+		task.getDirectory();
 		
 		// Store reference to directory obtained
 		Path path = task.getWorkingDirectory();

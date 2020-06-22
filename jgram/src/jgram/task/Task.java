@@ -32,6 +32,7 @@ public abstract class Task {
 	private Path workingDirectory;
 	private ExecutorService executorService;
 	private int threadCount;
+	private Scanner keyboard;
 
 	// Constructor(s)
 	public Task() {
@@ -39,10 +40,17 @@ public abstract class Task {
 		executorService = Executors.newFixedThreadPool(10);
 	}
 	
-	public Task(String userSecret) {
+	public Task(Scanner inputKeyboard) {
+		fileList = new ArrayList<>();
+		executorService = Executors.newFixedThreadPool(10);
+		keyboard = inputKeyboard;
+	}
+	
+	public Task(String userSecret, Scanner inputKeyboard) {
 		secret = new Secret(userSecret);
 		fileList = new ArrayList<>();
 		executorService = Executors.newFixedThreadPool(10);
+		keyboard = inputKeyboard;
 	}
 	
 	/**
@@ -78,12 +86,12 @@ public abstract class Task {
 			// Post2 Filter Predicate interface object
 			Predicate<Path> isNotHidden = (p -> {
 				String name = p.getName(p.getNameCount() - 1).toString();
-				return name.startsWith("~");
+				return !name.startsWith("~");
 			});
 			
 			// Post3 Create Path stream and store valid documents in file list
 			Stream<Path> pathStream = Files.list(workingDirectory);
-			fileList = pathStream.filter(isDocx.or(isNotHidden))
+			fileList = pathStream.filter(isDocx.and(isNotHidden))
 					.collect(Collectors.toList());
 			pathStream.close();
 		
@@ -135,7 +143,7 @@ public abstract class Task {
 	 * 
 	 * @param keyboard
 	 */
-	public void getDirectory(Scanner keyboard) {
+	public void getDirectory() {
 		
 		// Path object to return
 		Path path = null;
@@ -145,8 +153,7 @@ public abstract class Task {
 		boolean keepGoing = true;
 		while (notADirectory && keepGoing) {
 								
-			System.out.println("\nPlease enter a directory that contains Word "
-					+ "documents."
+			System.out.println("Enter a directory: "
 					+ "\n\t(Example: /Users/username/Documents/Assignments/):");
 			String input = keyboard.nextLine();
 			
@@ -184,8 +191,7 @@ public abstract class Task {
 	 */
 	public void getDirectoryAndFileList() throws IOException {
 		// Post1 Create file list
-		Scanner keyboard = new Scanner(System.in);
-		getDirectory(keyboard);
+		getDirectory();
 		createFileList();
 			
 		// Return to main menu if file list was not found
@@ -201,6 +207,10 @@ public abstract class Task {
 	
 	public List<Path> getFileList() {
 		return fileList;
+	}
+	
+	public Scanner getKeyboard() {
+		return keyboard;
 	}
 	
 	public Secret getSecret() {
@@ -231,10 +241,14 @@ public abstract class Task {
 	 * Intent: Perform preparation operations required to run specific Task 
 	 * performTask method.
 	 */
-	abstract protected void prep() throws Exception;
+	abstract public void prep() throws Exception;
 	
 	public void setFileList(List<Path> paths) {
 		fileList = paths;
+	}
+	
+	public void setKeyboard(Scanner inputKeyboard) {
+		keyboard = inputKeyboard;
 	}
 	
 	public void setSecret(Secret uSecret) {

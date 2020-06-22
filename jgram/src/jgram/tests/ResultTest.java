@@ -47,5 +47,26 @@ class ResultTest {
 			fail("Invalid checkpoints created.");
 		}
 	}
+	
+	/**
+	 * Tests Result extractStudentName method.
+	 */
+	@Test
+	void testExtractStudentName() {
+		
+		// Create a result object and set the assignment name
+		Result result = new Result();
+		result.setAssignmentName("last_first_a1.docx");
+		
+		// Extract the student name from the assignment name
+		result.extractStudentName();
+		
+		// Assert first name
+		assertTrue("first".equals(result.getStudentFirstName()));
+		
+		// Assert last name
+		assertTrue("last".equals(result.getStudentLastName()));
+		
+	}
 
 }

@@ -10,12 +10,10 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
 
 import jgram.security.Secret;
-import jgram.storage.RecordManager;
 import jgram.task.TamperTaskRun;
 
 public class TamperTaskRunTest {
@@ -38,28 +36,6 @@ public class TamperTaskRunTest {
 		
 		return outStream;
 	}
-		
-	/**
-	 * Intent: Create RecordManager object.
-	 * @param resourceDocument
-	 * @return
-	 */
-	private RecordManager createRecordManager(Path resourceDocument) {
-		
-		RecordManager recordManager = new RecordManager(resourceDocument
-				.getParent());
-		try {
-			recordManager.createInputStream();
-			recordManager.createRecordListFromFile();
-		} catch (IOException e) {
-			fail(e.getMessage());
-		} catch (ClassNotFoundException e) {
-			fail(e.getMessage());
-		}
-		
-		return recordManager;
-		
-	}
 	
 	/**
 	 * Intent: Run task using appropriate input data for test comparison of 
@@ -71,25 +47,22 @@ public class TamperTaskRunTest {
 		// Create PrintWriter
 		PrintWriter outStream = createPrintWriter(resourceDocument);
 		
-		// Create RecordManager
-		RecordManager recordManager = createRecordManager(resourceDocument);
+		// Hash String
+		String hashString = "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIxIiwiaWF0IjoxNTkyNTI3MTczLCJzdWIiOiJKR1JBTSIsImlzcyI6IkJVLU1FVCIsIjEtV2VpZ2h0Ijo3LCIxLUdyYWRlIjo5MCwiMS1GZWVkYmFjayI6IiIsIjItV2VpZ2h0Ijo1LCIyLUdyYWRlIjo5NywiMi1GZWVkYmFjayI6ImdyZWF0IGNsYXJpdHkiLCIzLVdlaWdodCI6NywiMy1HcmFkZSI6OTUsIjMtRmVlZGJhY2siOiJVc2UgZ2VuZXJpY3MsIGJ1dCBvdmVyYWxsIGdvb2Qgd29yayIsIkNQSW5kZXhlcyI6IlsxLCAyLCAzXSIsIkdyYWRlTWFwcGluZyI6IkErID0gOTdcbkEgID0gOTVcbkEtID0gOTNcbkIrID0gODdcbkIgID0gODVcbkItID0gODNcbkMgID0gNzdcbkYgID0gNjdcbiIsIlRvdGFsR3JhZGUiOjkzLjY4NDIxfQ.zfQhS04Itl3WzTvCv_uVOhJI8v68nsK6jP-4QIi5Wrs";
 		
 		// Create Secret
 		Secret secret = new Secret("secret");
 		
 		// Create new task run
-		TamperTaskRun taskRun = new TamperTaskRun(outStream, resourceDocument, 
-				recordManager, secret);
+		TamperTaskRun tamperTaskRun = new TamperTaskRun(outStream, hashString,
+				resourceDocument, secret);
 		
 		// Run task
-		taskRun.run();
+		tamperTaskRun.run();
 		
-		try {
-			recordManager.getInputStream().close();
-		} catch (IOException e) {
-			fail(e.getMessage());
-		}
+		// Close resources
 		outStream.close();
+		
 	}
 	
 	/**
@@ -102,16 +75,9 @@ public class TamperTaskRunTest {
 		
 		// Locate graded test assignment file
 		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("tamper/GRADED/GRADED_"
-						+ "tamper-task-test-invalid.docx");
+				.returnPath("tamperRun/GRADED/GRADED_tamper-invalid.docx");
 		
 		runTask(resourceDocument);
-		
-		// Assert dat file exists
-		Path datPath = Paths.get(resourceDocument.getParent().toString(), 
-				"jgram.dat");
-		File datFile = datPath.toFile();
-		assertTrue(datFile.exists());
 		
 		// Assert 'report.txt' exists
 		String reportFileString = resourceDocument
@@ -131,7 +97,7 @@ public class TamperTaskRunTest {
 			
 			// Assert key report sections exist in report.txt
 			assertTrue(report.contains("\nFilename: "
-					+ "GRADED_tamper-task-test-invalid.docx\n"));
+					+ "GRADED_tamper-invalid.docx\n"));
 			assertTrue(report.contains("\nTamper Status: \n\tFAILED"));
 			assertTrue(report.contains("\nCurrent Grade Mapping: \n"));
 			assertTrue(report.contains("\nPrevious Result Table: \n"));
@@ -153,16 +119,9 @@ public class TamperTaskRunTest {
 		
 		// Locate graded test assignment file
 		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("tamper/GRADED/GRADED_"
-						+ "tamper-task-test-valid.docx");
+				.returnPath("tamperRun/GRADED/GRADED_tamper-valid.docx");
 		
 		runTask(resourceDocument);
-		
-		// Assert dat file exists
-		Path datPath = Paths.get(resourceDocument.getParent().toString(), 
-				"jgram.dat");
-		File datFile = datPath.toFile();
-		assertTrue(datFile.exists());
 		
 		// Assert 'report.txt' exists
 		String reportFileString = resourceDocument
@@ -182,7 +141,7 @@ public class TamperTaskRunTest {
 			
 			// Assert key report sections exist in report.txt
 			assertTrue(report.contains("\nFilename: "
-					+ "GRADED_tamper-task-test-valid.docx\n"));
+					+ "GRADED_tamper-valid.docx\n"));
 			assertTrue(report.contains("\nTamper Status: \n\tPASSED"));
 			assertTrue(report.contains("\nGrade Mapping: \n"));
 			assertTrue(report.contains("\nResult Table: \n"));

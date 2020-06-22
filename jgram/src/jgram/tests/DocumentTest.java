@@ -56,7 +56,7 @@ class DocumentTest {
 		
 		// Locate test assignment file
 		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("document/document-test.docx");
+				.returnPath("document/document-test.docx");
 		
 		// Create a secret object to use for hash string creation
 		Secret secret = new Secret("secret");
@@ -149,14 +149,14 @@ class DocumentTest {
 			
 			// Locate test assignment file
 			Path resourceDocument = TestUtilities
-					.returnAssignmentPath("document/document-test.docx");
+					.returnPath("document/document-test.docx");
 						
 			// Create a Document object and parse it for checkpoints
 			Document document = new Document(resourceDocument);
 			document.parseComments();			
 			document.parseCheckpoints();
 			
-			// Create an LinkedList of checkpoints for comparison
+			// Create an list of checkpoints for comparison
 			List<Checkpoint> checkpointList = new ArrayList<>();
 			
 			checkpointList.add(new Checkpoint(3, 85, "Throws "
@@ -199,7 +199,7 @@ class DocumentTest {
 			
 			// Locate test assignment file
 			Path resourceDocument = TestUtilities
-					.returnAssignmentPath("document/document-test.docx");
+					.returnPath("document/document-test.docx");
 			
 			// Create a document and parse it for comments
 			Document document1 = new Document(resourceDocument);
@@ -254,7 +254,7 @@ class DocumentTest {
 			
 			// Locate test assignment file
 			Path resourceDocument = TestUtilities
-					.returnAssignmentPath("document/document-test.docx");
+					.returnPath("document/document-test.docx");
 			
 			// Create a Document and parse it for a grade mapping
 			Document document = new Document(resourceDocument);

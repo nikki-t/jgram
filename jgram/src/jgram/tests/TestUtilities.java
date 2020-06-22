@@ -64,7 +64,7 @@ public class TestUtilities {
 	 * file system.
 	 * @return
 	 */
-	public static Path returnAssignmentPath(String filename) {
+	public static Path returnPath(String filename) {
 		
 		String filePath = new File("").getAbsolutePath();
 		filePath += "/src/jgram/tests/resources/" + filename;

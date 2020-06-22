@@ -10,10 +10,8 @@ import jgram.assessment.Result;
 import jgram.exceptions.InvalidCheckpointException;
 import jgram.exceptions.InvalidCommentException;
 import jgram.exceptions.InvalidGradeMappingException;
-import jgram.exceptions.InvalidRecordException;
 import jgram.security.JWT;
 import jgram.security.Secret;
-import jgram.storage.RecordManager;
 
 public class TamperTaskRun extends TaskRun {
 	
@@ -23,13 +21,15 @@ public class TamperTaskRun extends TaskRun {
 	// Instance variable(s)
 	private Document previousDocument;
 	private Document currentDocument;
+	private String hashString;
 	
 
-	public TamperTaskRun(PrintWriter inputOutStream, Path inputPath, 
-			RecordManager inputRM, Secret inputSecret) {
+	public TamperTaskRun(PrintWriter inputOutStream, String inputHash, 
+			Path inputPath, Secret inputSecret) {
 		
-		super(inputPath, inputRM, inputSecret);
-		outStream = inputOutStream;		
+		super(inputPath, inputSecret);
+		outStream = inputOutStream;	
+		hashString = inputHash;
 	}
 	
 	/**
@@ -114,16 +114,15 @@ public class TamperTaskRun extends TaskRun {
 	/**
 	 * Intent: Retrieve current document grading result data.
 	 * 
-	 * @param secret
-	 * @param path
 	 * @return
 	 * @throws IOException
 	 * @throws InvalidCommentException
 	 */
-	private void retrieveCurrentDocument(Secret secret, Path path) 
+	private void retrieveCurrentDocument() 
 			throws IOException, InvalidCommentException {
 		
-		currentDocument = new Document(path);	
+		currentDocument = new Document(getPath());	
+		
 		// Comments
 		currentDocument.parseComments();
 		// Test for presence of comments
@@ -149,7 +148,6 @@ public class TamperTaskRun extends TaskRun {
 		
 		// Result
 		currentDocument.calculateResult();
-		currentDocument.createHashString(secret);
 	}
 	
 	/**
@@ -157,47 +155,30 @@ public class TamperTaskRun extends TaskRun {
 	 * 
 	 * Postcondition1 (Previous document creation): A Document object is created
 	 * to represent the results from a previously grading attempt.
-	 * Postcondition2 (Extract file name): The previously graded filename is 
-	 * located and the filename is stored as a String.
-	 * Postcondition4 (Hash string): The hash string is extracted from the 
-	 * record and stored in the previous Document object.
-	 * Postcondition5 (Decode hash string): The hash string stored in the 
+	 * Postcondition2 (Result): A Result object is created to store the
+	 * hash string and the Result is stored in a Document.
+	 * Postcondition3 (Decode hash string): The hash string stored in the 
 	 * previous Document object is decoded and used to populate data fields
 	 * of Document object.
 	 *  
-	 * @param secret
-	 * @param path
-	 *
 	 * @throws InvalidCheckpointException
 	 * @throws InvalidGradeMappingException 
 	 * @throws ClassNotFoundException 
 	 * @throws InvalidRecordException 
 	 */
-	private void retrievePreviousDocument(Secret secret, Path path) 
+	private void retrievePreviousDocument() 
 			throws IOException, InvalidCheckpointException, 
-			InvalidGradeMappingException, ClassNotFoundException, 
-			InvalidRecordException {
+			InvalidGradeMappingException, ClassNotFoundException {
 		
 		// Post1 Previous document creation
-		previousDocument = new Document(path);
+		previousDocument = new Document(getPath());
 		
-		// Post2 Extract file name
-		int index = path.getNameCount();
-		String assignmentName = path
-				.getName(index - 1)
-				.toString();
+		// Post2 Result
+		Result result = new Result(hashString);
+		previousDocument.setResult(result);
 		
-		// Post3 Retrieve hash string
-		String hashString = getRecordManager()
-				.retrieveRecord(assignmentName)
-				.getHashString();
-		if (hashString.equals("")) {
-			throw new InvalidRecordException("Could not find record.");
-		}
-		previousDocument.setHashString(hashString);	
-		
-		// Post4 Decode hash string
-		JWT jwt = new JWT(secret);
+		// Post3 Decode hash string
+		JWT jwt = new JWT(getSecret());
 		jwt.decode(previousDocument);
 
 		
@@ -225,15 +206,11 @@ public class TamperTaskRun extends TaskRun {
 		
 		try {
 			
-			// Store data needed for results
-			Secret secret = getSecret();
-			Path path = getPath();
-			
 			// Post1 Previous result
-			retrievePreviousDocument(secret, path);
+			retrievePreviousDocument();
 			
 			// Post2 Current result
-			retrieveCurrentDocument(secret, path);
+			retrieveCurrentDocument();
 			
 			// Post3 Comparison of results
 			
@@ -244,7 +221,7 @@ public class TamperTaskRun extends TaskRun {
 			boolean isResultEqual = compareResults();
 			
 			// Post4 Report
-			writeReport(isGradeMapEqual, isResultEqual, path);
+			writeReport(isGradeMapEqual, isResultEqual, getPath());
 		
 		// Post5 Handle exceptions for specific files
 		} catch (Exception e) {

@@ -18,30 +18,91 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import jgram.security.Secret;
+import jgram.storage.Assignment;
+import jgram.storage.RecordManager;
+import jgram.task.EvaluationTask;
 import jgram.task.TamperTask;
 import jgram.task.Task;
 
 public class TamperTaskTest {
 	
-	private TamperTask performTask(Path resourceDir) {
+	/**
+	 * Intent run EvalTask so records are present in JGRAM test database.
+	 * 
+	 * @param resourceDir
+	 */
+	private void performEvalTask(Path resourceDir) {
 		
 		// Change System.in to point to input
-		InputStream in = new ByteArrayInputStream(resourceDir
-				.getParent()
-				.toString()
-				.getBytes());
-		System.setIn(in);
+			InputStream in = new ByteArrayInputStream(resourceDir.toString().getBytes());
+			System.setIn(in);
+
+			// Create new EvaluationTask object
+			EvaluationTask evalTask = new EvaluationTask();
+			
+			// Mock createFileList and createAssignment
+			evalTask = spy(EvaluationTask.class);
+			try {
+				doNothing().when(evalTask).prep();
+			} catch (IOException e) {
+				fail("Could not create mock of createFileList or "
+						+ "retreiveAssignmentTitle method.");
+			}
+			
+			// Set task secret
+			Secret secret = new Secret("secret");
+			evalTask.setSecret(secret);
+			
+			// Simulate output from Task createFileList method
+			Path path1 = Paths.get(resourceDir.toString(), 
+					"tamper-valid.docx");
+			Path path2 = Paths.get(resourceDir.toString(),
+					"tamper-invalid.docx");
+			List<Path> fileList = new ArrayList<>();
+			fileList.add(path1);
+			fileList.add(path2);
+			evalTask.setFileList(fileList);
+			
+			// Set Assignment
+			Assignment assignment = new Assignment("testUser", 
+					"Tamper Task Test", "/jgram/test/");
+			evalTask.setAssignment(assignment);
+			
+			// Set Record Manager (including test database)
+			RecordManager rm = new RecordManager(assignment);
+			String dbPath = "jdbc:sqlite:" 
+					+ TestUtilities.returnPath("jgramTest.db").toString();
+			rm.setURL(dbPath);
+			evalTask.setRecordManager(rm);
+
+			// Perform task
+			evalTask.performTask();
+		
+	}
+	
+	/**
+	 * Intent: Perform Tamper Task to produce testable output.
+	 * 
+	 * @param resourceDir
+	 * @return
+	 */
+	private TamperTask performTask(Path resourceDir) {
 		
 		// Create new TamperTask object
 		Task task = new TamperTask();
 		
-		// Mock createFileList
+		// Mock createFileList, getDirectory, and testTamperPath
 		task = spy(TamperTask.class);
 		try {
 			doNothing().when(task).createFileList();
+			doNothing().when(task).getDirectory();
+			doNothing().when((TamperTask) task).testTamperPath();
 		} catch (IOException e) {
 			fail("Could not create mock of createFileList method.");
 		}
+		
+		// Set working directory
+		task.setWorkingDirectory(resourceDir);
 		
 		// Set task secret
 		Secret secret = new Secret("secret");
@@ -49,18 +110,24 @@ public class TamperTaskTest {
 		
 		// Simulate output from Task createFileList method
 		Path path1 = Paths.get(resourceDir.toString(), 
-				"GRADED_tamper-task-test-valid.docx");
+				"GRADED_tamper-valid.docx");
 		Path path2 = Paths.get(resourceDir.toString(),
-				"GRADED_tamper-task-test-invalid.docx");
+				"GRADED_tamper-invalid.docx");
 		List<Path> fileList = new ArrayList<>();
 		fileList.add(path1);
 		fileList.add(path2);
 		task.setFileList(fileList);
 		
-		/// Perform task
-		task.performTask();
+		// Set database URL
+		String dbPath = "jdbc:sqlite:" 
+				+ TestUtilities.returnPath("jgramTest.db").toString();
+		TamperTask tamperTask = (TamperTask) task;
+		tamperTask.getRecordManager().setURL(dbPath);
 		
-		return (TamperTask) task;
+		/// Perform task
+		tamperTask.performTask();
+		
+		return tamperTask;
 }
 	
 	/**
@@ -76,13 +143,11 @@ public class TamperTaskTest {
 				.returnAssignmentDir("tamper/GRADED/"
 						+ "GRADED_tamper-task-test-valid.docx");
 		
-		// Perform task
-		TamperTask task = performTask(resourceDir);
+		// Perform eval task
+		performEvalTask(resourceDir.getParent());
 		
-		// Assert dat file exists
-		Path datPath = Paths.get(resourceDir.toString(), "jgram.dat");
-		File datFile = datPath.toFile();
-		assertTrue(datFile.exists());
+		// Perform tamper task
+		TamperTask task = performTask(resourceDir);
 		
 		// Assert 'report.txt' exists
 		String reportFileString = resourceDir.toString() + "/report.txt";

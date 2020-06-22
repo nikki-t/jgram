@@ -19,6 +19,10 @@ public class Result {
 	// Instance variable(s)
 	private float totalGrade;
 	private List<Checkpoint> checkpointList;
+	private String hashString;
+	private String assignmentName;
+	private String studentFirstName;
+	private String studentLastName;
 	
 	// Constructor(s)
 	public Result() {
@@ -27,6 +31,11 @@ public class Result {
 	
 	public Result(List<Checkpoint> cList) {
 		checkpointList = cList;
+	}
+	
+	public Result(String inputHash) {
+		hashString = inputHash;
+		checkpointList = new ArrayList<>();
 	}
 	
 	public Result(List<Checkpoint> cList, float tGrade) {
@@ -110,6 +119,46 @@ public class Result {
 		
 	}
 	
+	
+	/**
+	 * Intent: Set the student's first and last name for the Result object from
+	 * the assignment name.
+	 * 
+	 * Precondition1 (Assignment name): The assignment name has been set for the 
+	 * Result object.
+	 * 
+	 * Postcondition1 (Split assignment name): The assignment name has been 
+	 * split into a String array on the underscore character.
+	 * Postcondition2 (Test split): The student's name is set to the assignment
+	 * name if a first and last name cannot be determined.
+	 * Postcondition3 (Assign first and last name): A first and last name are
+	 * assigned to the Result object.
+	 */
+	public void extractStudentName() {
+		
+		// Post 1 Split assignment name
+		String[] names = assignmentName.split("_");
+		
+		// Post 2 Test split
+		if (names.length < 2) {
+			studentFirstName = names[0];
+			studentLastName = names[0];
+		
+		} else {
+			// Post 3 Assign first and last name
+			studentFirstName = names[1];
+			studentLastName = names[0];
+		}
+	}
+	
+	/**
+	 * Returns result's assignment name.
+	 * @return String
+	 */
+	public String getAssignmentName() {
+		return assignmentName;
+	}
+	
 	/**
 	 * Returns result's Checkpoint map.
 	 * @return HashMap of checkpoints and identifiers
@@ -119,11 +168,51 @@ public class Result {
 	}
 	
 	/**
+	 * Returns result's hash string.
+	 * @return String
+	 */
+	public String getHashString() {
+		return hashString;
+	}
+	
+	/**
+	 * Returns result's student first name.
+	 * @return String
+	 */
+	public String getStudentFirstName() {
+		return studentFirstName;
+	}
+	
+	/**
+	 * Returns result's student last name.
+	 * @return String
+	 */
+	public String getStudentLastName() {
+		return studentLastName;
+	}
+	
+	/**
 	 * Returns result's total grade.
 	 * @return float value of total grade
 	 */
 	public float getTotalGrade() {
 		return totalGrade;
+	}
+	
+	/**
+	 * Sets the assignment name value to parameter value.
+	 * @param String
+	 */
+	public void setAssignmentName(String inputAssignment) {
+		assignmentName = inputAssignment;
+	}
+	
+	/**
+	 * Sets the hash string value to parameter value.
+	 * @param String
+	 */
+	public void setHashString(String inputHash) {
+		hashString = inputHash;
 	}
 	
 	/**

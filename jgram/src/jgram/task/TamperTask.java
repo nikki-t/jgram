@@ -6,6 +6,9 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -27,46 +30,55 @@ public class TamperTask extends Task {
 	
 	// Instance variable(s)
 	private PrintWriter outStream;
-	private RecordManager recordManager;
 	private String reportFilename;
+	private Map<Path, String> pathHashMap;
+	private RecordManager rm;
 	
 	// Constructor(s)
 	public TamperTask() {
 		super();
+		pathHashMap = new HashMap<>();
+		rm = new RecordManager();
 	}
 	
-	public TamperTask(String userSecret) {
-		super(userSecret);
+	public TamperTask(String userSecret, Scanner inputKeyboard) {
+		super(userSecret, inputKeyboard);
+		pathHashMap = new HashMap<>();
+		rm = new RecordManager();
+		
 	}
 	
 	/**
-	 * Intent: Create a list of previously saved records.
+	 * Intent: Create a list of graded file names.
 	 * 
-	 * Postcondition1 (RecordManager): A RecordManager object is created from
-	 * the current working directory.
-	 * Postcondition2 (Input stream): An ObjectInputStream object is created
-	 * in order to read data from the previously saved file.
-	 * Postcondition3 (Record list): A list of records is created from the 
-	 * previously saved file.
-	 * 
-	 * @throws FileNotFoundException
-	 * @throws IOException
-	 * @throws ClassNotFoundException
+	 * Postcondition1 (Loop through files): All files from the Task file list
+	 * are iterated over.
+	 * Postcondition2 (Extract name): The original file name is extracted for 
+	 * any files that begin with the String "GRADED_".
+	 * Postcondition3 (Return list): A list of original file names is returned 
+	 * to the calling method.
+	 * @return
 	 */
-	private void createRecordManager() throws FileNotFoundException, IOException,
-			ClassNotFoundException {
+	private Map<String, Path> createFileMap() {
 		
-		// Post1 RecordManager
-		recordManager = new RecordManager(getWorkingDirectory());
+		Map<String, Path> fileMap = new HashMap<>();
+		String gradedFile;
+		String filename;
 		
-		// Post2 Input stream
-		recordManager.createInputStream();
+		// Post1 Loop through files
+		for (Path path : getFileList()) {
+			
+			// Post2 Extract name
+			gradedFile = path.getFileName().toString();
+			
+			if (gradedFile.startsWith("GRADED_")) {
+				filename = gradedFile.substring(7);
+				fileMap.put(filename, path);
+			}
+		}
 		
-		// Post3 Record list
-		recordManager.createRecordListFromFile();
-		
-		// Close open resources
-		recordManager.getInputStream().close();
+		// Post3 Return list
+		return fileMap;
 		
 	}
 	
@@ -88,6 +100,21 @@ public class TamperTask extends Task {
 		
 	}
 	
+	/**
+	 * Intent: Retrieve RecordManager object.
+	 * 
+	 * @return RecordManager
+	 */
+	public RecordManager getRecordManager() {
+		return rm;
+	}
+	
+	/**
+	 * Intent: Create 'report.txt' file path.
+	 * 
+	 * @param path
+	 * @return
+	 */
 	private String getReportFilename(Path path) {
 		
 		// Locate previously graded file directory
@@ -112,7 +139,7 @@ public class TamperTask extends Task {
 	 * Postcondition2 (Create ExecutorService): An ExecutorService object is
 	 * created to handle the execution of a task run as a new thread on each 
 	 * file on up to 5 files at a time.
-	 * Postcondition3 (Document loop): All documents in a directory have been
+	 * Postcondition3 (Map loop): All documents found at a path have been
 	 * iterated on and the task operations have been executed if applicable. 
 	 * Postcondition4 (Handle exceptions): Exceptions are reported to the 
 	 * console and control returns to the caller.
@@ -128,11 +155,12 @@ public class TamperTask extends Task {
 			// Post2 Create ExecutorService
 			ExecutorService executorService = getExecutorService();
 						
-			// Post3 Document Loop
-			for (Path path : getFileList()) {
+			// Post3 Map Loop
+			for (Map.Entry<Path, String> entry : pathHashMap.entrySet()) {
 				
-				TamperTaskRun taskRun = new TamperTaskRun(outStream, path, 
-						recordManager, getSecret());
+				TamperTaskRun taskRun = new TamperTaskRun(outStream, 
+						entry.getValue(), entry.getKey(), getSecret());
+				
 				executorService.execute(taskRun);
 				incrementThreadCount();
 			}
@@ -171,18 +199,23 @@ public class TamperTask extends Task {
 	 * Postcondition3 (File list): A list of valid graded files is created.
 	 * Postcondition4 (PrintWriter): A PrinterWriter object is created with
 	 * the name of the report file.
-	 * Postcondition5 (RecordManager creation): RecordManager object is 
-	 * created and a list of records is retrieved.
+	 * Postcondition5 (Extract a list of file names): A list of original
+	 * previously graded file names is extracted from the Task file list and
+	 * stored in a map with associated graded file paths.
+	 * Postcondition6 (Retrieve hash strings): A map of hash strings associated
+	 * with previously graded file names is created.
 	 * 
 	 * @throws IOException
 	 * @throws ClassNotFoundException 
+	 * @throws SQLException 
 	 */
 	@Override
-	protected void prep() throws IOException, ClassNotFoundException {
+	public void prep() throws IOException, ClassNotFoundException, 
+		SQLException {
 		
 		// Post1 Working directory
-		Scanner keyboard = new Scanner(System.in);
-		getDirectory(keyboard);
+		System.out.println("\nChoose a directory with graded Word documents.");
+		getDirectory();
 		
 		// Post2 Graded
 		testTamperPath();
@@ -199,17 +232,70 @@ public class TamperTask extends Task {
 		reportFilename = getReportFilename(getWorkingDirectory());
 		outStream = new PrintWriter(reportFilename);
 		
-		// Post5 RecordManager
-		createRecordManager();
+		// Post5 Extract a list of file names
+		Map<String, Path> fileMap = createFileMap();
+		if (fileMap.isEmpty()) {
+			throw new FileNotFoundException("Could not find previously "
+					+ "graded files.");
+		}
+		
+		// Post6 Retrieve hash strings
+		retrieveHashString(fileMap);
+		if (pathHashMap.isEmpty()) {
+			throw new FileNotFoundException("Could not find any previously "
+					+ "graded data.");
+		}
+	}
+	
+	/**
+	 * Intent: Create a map of previously saved hash strings associated with
+	 * specific files.
+	 * 
+	 * Postcondition1 (RecordManager): A  connection to the JGRAM database is 
+	 * opened.
+	 * Postcondition2 (Retrieve map): A hash map is created and contains the
+	 * graded file path reference as a key and the associated hash string as a
+	 * value.
+	 * Postcondition3 (Close connection): The connection to the JGRAM database
+	 * is closed.
+	 * 
+	 * @param fileMap
+	 * @throws SQLException 
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	private void retrieveHashString(Map<String, Path> fileMap) 
+			throws SQLException {
+		
+		// Post1 RecordManager
+		rm.openConnection();
+		
+		// Post2 Retrieve map
+		pathHashMap = rm.createPathHashMap(fileMap);
+		
+		// Post3 Close connection
+		rm.closeConnection();
+		
+	}
+	
+	/**
+	 * Intent: Set RecordManager object reference.
+	 * 
+	 * @param inputRM
+	 */
+	public void setRecordManager(RecordManager inputRM) {
+		rm = inputRM;
 	}
 	
 	/**
 	 * Intent: Adjust the working directory for the 'GRADED' sub-directory. 
 	 * If the working directory is null, no changes are made.
 	 * If 'GRADED' is not found through new FileNotFoundException.
+	 * 
 	 * @throws FileNotFoundException
 	 */
-	private void testTamperPath() throws FileNotFoundException {
+	public void testTamperPath() throws FileNotFoundException {
 		
 		if (getWorkingDirectory() != null) {
 			setWorkingDirectory(Paths.get(getWorkingDirectory().toString(), 

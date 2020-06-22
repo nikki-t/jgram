@@ -93,6 +93,26 @@ public class JWT {
 	}
 	
 	/**
+	 * Intent: Convert String into an array by splitting the string on commas
+	 * and spaces.
+	 * 
+	 * @param cpIndexes
+	 * 
+	 * @return String array
+	 */
+	private String[] convertToArray(String cpIndexes) {
+		
+		// Obtain substring that contains only indexes separated by commas
+		String subString = cpIndexes.substring(1, cpIndexes.length() - 1);
+		
+		// Split the array on the comma
+		String[] strIndexArray = subString.split(", ");
+		
+		return strIndexArray;
+		
+	}
+	
+	/**
 	 * Intent: Decode Document hash string to produce a Result object
 	 * and GradeMapping object.
 	 * 
@@ -110,7 +130,7 @@ public class JWT {
 	public void decode(Document document) throws InvalidCheckpointException, 
 			InvalidGradeMappingException {
 		
-		String jwt = document.getHashString();
+		String jwt = document.getResult().getHashString();
 		
 		// Create parser to parse hash string and set secret as signing key
 		Claims claims = Jwts.parser()
@@ -231,26 +251,6 @@ public class JWT {
 	}
 	
 	/**
-	 * Intent: Convert String into an array by splitting the string on commas
-	 * and spaces.
-	 * 
-	 * @param cpIndexes
-	 * 
-	 * @return String array
-	 */
-	private String[] convertToArray(String cpIndexes) {
-		
-		// Obtain substring that contains only indexes separated by commas
-		String subString = cpIndexes.substring(1, cpIndexes.length() - 1);
-		
-		// Split the array on the comma
-		String[] strIndexArray = subString.split(", ");
-		
-		return strIndexArray;
-		
-	}
-	
-	/**
 	 * Precondition1 (User data): User must enter an id, issuer, subject, and
 	 * secret to encode the Result object and GradeMapping object of a 
 	 * Document object.
@@ -302,7 +302,7 @@ public class JWT {
 		builder.claim(CLAIM_TOTAL_GRADE, result.getTotalGrade());
 		
 		// Post3 Compact claims into a String and set hashString of Document
-		document.setHashString(builder.compact());
+		document.getResult().setHashString(builder.compact());
 
 	}
 	

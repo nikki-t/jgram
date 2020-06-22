@@ -46,7 +46,6 @@ class GradeMappingTest {
 	void testInvalidGradeMapping() {
 		
 		assertThrows(InvalidGradeMappingException.class, () -> {
-			@SuppressWarnings("unused")
 			// Create grade mapping
 			GradeMapping gradeMapping = new GradeMapping();
 			gradeMapping.setGrade("A+", 97);

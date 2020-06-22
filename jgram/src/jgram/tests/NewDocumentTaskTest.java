@@ -33,7 +33,7 @@ public class NewDocumentTaskTest {
 		// Mock createFileList
 		task = spy(NewDocumentTask.class);
 		try {
-			doNothing().when(task).createFileList();
+			doNothing().when(task).prep();
 		} catch (IOException e) {
 			fail("Could not create mock of createFileList method.");
 		}

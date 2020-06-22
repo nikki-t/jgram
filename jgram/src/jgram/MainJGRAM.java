@@ -2,6 +2,7 @@ package jgram;
 
 import java.util.Scanner;
 
+import jgram.task.AssignmentReportTask;
 import jgram.task.EvaluationTask;
 import jgram.task.NewDocumentTask;
 import jgram.task.TamperTask;
@@ -9,13 +10,14 @@ import jgram.task.Task;
 
 public class MainJGRAM {
 	
-	// Class constant(s)
+	// Class variable(s)
 	private static final String TASK_SELECTION = "Select Task : " 
 			+ "\n\t 1 : New Document Test " 
 			+ "\n\t 2 : Generate Grade"
 			+ "\n\t 3 : Tamper Test" 
-			+ "\n\t 4 : Help"
-			+ "\n\t 5 : Exit"
+			+ "\n\t 4 : Assignment Report"
+			+ "\n\t 5 : Help"
+			+ "\n\t 6 : Exit"
 			+ "\n\t\t (Example: 1): ";
 	
 	private static final String GET_SECRET = "\nEnter secret (Example: "
@@ -57,7 +59,7 @@ public class MainJGRAM {
 				
 				// New Document
 				case "1":
-					Task newDocTask = new NewDocumentTask();
+					Task newDocTask = new NewDocumentTask(keyboard);
 					newDocTask.performTask();
 					break;
 				
@@ -65,7 +67,7 @@ public class MainJGRAM {
 				case "2":
 					String evalSecret = prompt(GET_SECRET, keyboard);
 					System.out.println(SECRET_REMINDER);
-					Task evalTask = new EvaluationTask(evalSecret);
+					Task evalTask = new EvaluationTask(evalSecret, keyboard);
 					evalTask.performTask();
 					break;
 				
@@ -73,17 +75,23 @@ public class MainJGRAM {
 				case "3":
 					String tamperSecret = prompt(GET_SECRET, keyboard);
 					System.out.println(SECRET_REMINDER);
-					Task tamperTask = new TamperTask(tamperSecret);
+					Task tamperTask = new TamperTask(tamperSecret, keyboard);
 					tamperTask.performTask();
 					break;
-				
-				// Help
+					
+				// Report
 				case "4":
+					Task assignmentReportTask = new AssignmentReportTask(keyboard);
+					assignmentReportTask.performTask();
+					break;
+					
+				// Help
+				case "5":
 					help();
 					break;
 				
 				// Exit
-				case "5":
+				case "6":
 					keepGoing = false;
 					break;
 				
@@ -111,8 +119,9 @@ public class MainJGRAM {
 	    Task evalTask = new EvaluationTask();
 	    Task tamperTask = new TamperTask();
 	    Task newDocTask = new NewDocumentTask();
+	    Task reportTask = new AssignmentReportTask();
 
-	    Task[] taskList = {evalTask, tamperTask, newDocTask};
+	    Task[] taskList = {evalTask, tamperTask, newDocTask, reportTask};
 
 	    return taskList;
 	} 
@@ -145,11 +154,11 @@ public class MainJGRAM {
 	 * @param keyboard Scanner object
 	 * @return String of stored user input.
 	 */
-	private static String prompt(String message, Scanner keyboard) {
+	public static String prompt(String message, Scanner keyboard) {
 		
 		System.out.println(message);
 		
-		String userInput = keyboard.next();
+		String userInput = keyboard.nextLine();
 		
 		return userInput;		
 		

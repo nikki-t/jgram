@@ -1,6 +1,7 @@
 package jgram.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -15,7 +16,7 @@ import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.junit.jupiter.api.Test;
 
 import jgram.security.Secret;
-import jgram.storage.RecordManager;
+import jgram.storage.Assignment;
 import jgram.task.EvalTaskRun;
 
 public class EvalTaskRunTest {
@@ -24,28 +25,22 @@ public class EvalTaskRunTest {
 	/**
 	 * Intent: Run task using appropriate input data for test comparison of 
 	 * output.
-	 * @param resourceDocument
+	 * @param path
 	 */
-	private void runTask(Path resourceDocument) {
-				
-		// Create RecordManager
-		RecordManager recordManager = new RecordManager(resourceDocument
-				.getParent());
-		try {
-			recordManager.createOutputStream();
-		} catch (IOException e) {
-			fail(e.getMessage());
-		}
+	private Assignment runTask(Path path) {
 		
-		// Create Secret
+		// Create Assignment
+		Assignment assignment = new Assignment("testUser", 
+				"Eval Task Run Test", "/jgram/tests/");
+		
+		// Create EvalTaskRun
 		Secret secret = new Secret("secret");
-		
-		// Create new EvalTaskRun object
-		EvalTaskRun taskRun = new EvalTaskRun(resourceDocument, recordManager, 
-				secret);
+		EvalTaskRun evalTask = new EvalTaskRun(assignment, path, secret);
 		
 		// Run task
-		taskRun.run();
+		evalTask.run();
+		
+		return assignment;
 
 	}
 
@@ -59,9 +54,10 @@ public class EvalTaskRunTest {
 		
 		// Locate test assignment file
 		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("eval/eval-task-test-invalid.docx");
+				.returnPath("eval/eval-task-test-invalid.docx");
 		
-		runTask(resourceDocument);
+		// Run task and get assignment output 
+		Assignment assignment = runTask(resourceDocument);
 		
 		// Assert graded directory exists
 		String gradedDirectory = resourceDocument.getParent().toString() 
@@ -75,10 +71,9 @@ public class EvalTaskRunTest {
 		File gradedFile = new File(gradedAssignment);
 		assertTrue(!gradedFile.exists());
 		
-		// Assert dat file exists
-		Path datPath = Paths.get(gradedPath.toString(), "jgram.dat");
-		File datFile = datPath.toFile();
-		assertTrue(datFile.exists());
+		// Assert Assignment result and grade mapping are null
+		assertEquals(0, assignment.getResultList().size());
+		assertEquals(null, assignment.getGradeMapping());
 	}
 	
 	/**
@@ -92,9 +87,10 @@ public class EvalTaskRunTest {
 		
 		// Locate test assignment file
 		Path resourceDocument = TestUtilities
-				.returnAssignmentPath("eval/eval-task-test-valid.docx");
+				.returnPath("eval/eval-task-test-valid.docx");
 		
-		runTask(resourceDocument);
+		// Run task and get assignment output 
+		Assignment assignment = runTask(resourceDocument);
 		
 		// Assert graded directory exists
 		String gradedDirectory = resourceDocument.getParent().toString() 
@@ -122,10 +118,22 @@ public class EvalTaskRunTest {
 			fail(e.getMessage());
 		}
 		
-		// Assert dat file exists
-		Path datPath = Paths.get(gradedPath.toString(), "jgram.dat");
-		File datFile = datPath.toFile();
-		assertTrue(datFile.exists());
+		// Assert Assignment has a Result
+		// Checkpoints
+		int checkpointListSize = assignment
+				.getResultList()
+				.get(0)
+				.getCheckpointList()
+				.size();
+		assertEquals(3, checkpointListSize);
+		// Total grade
+		float totalGrade = assignment.getResultList().get(0).getTotalGrade();
+		assertEquals(92.5, totalGrade);
+		
+		// Assert Assignment has a Grade Mapping
+		assertNotEquals(assignment.getGradeMapping(), null);
+		assertEquals(8, assignment.getGradeMapping().getLimits().size());
+		
 	}
 
 }

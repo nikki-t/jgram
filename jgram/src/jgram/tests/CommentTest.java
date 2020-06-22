@@ -88,7 +88,6 @@ class CommentTest {
 	void testInvalidComment() {
 		
 		assertThrows(InvalidCommentException.class, () -> {
-			@SuppressWarnings("unused")
 			// Create a comment
 			Comment comment = new Comment("0", "Nikki Tebaldi", 
 					"CHECKPOINT(WEIGHT=3, GRADE=101, "

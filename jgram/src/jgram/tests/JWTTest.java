@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import jgram.assessment.Comment;
 import jgram.assessment.Document;
 import jgram.assessment.GradeMapping;
+import jgram.assessment.Result;
 import jgram.exceptions.InvalidCheckpointException;
 import jgram.exceptions.InvalidCommentException;
 import jgram.exceptions.InvalidGradeMappingException;
@@ -50,8 +52,13 @@ class JWTTest {
 		
 		try {
 			
-			// Create a new document set the comments list and a grade mapping
+			// Create a new document and set assignment path
 			Document document1 = new Document();
+			Path path = TestUtilities
+					.returnPath("/document/document-test.docx");
+			document1.setAssignmentPath(path);
+			
+			// Set the comments list and a grade mapping
 			document1.setCommentList(documentComments);
 			GradeMapping gradeMapping = new GradeMapping();
 			gradeMapping.setDefaultGradeMapping();
@@ -69,7 +76,8 @@ class JWTTest {
 			// Create a new document for comparison and set its hash string to
 			// document1's hash string
 			Document document2 = new Document();
-			document2.setHashString(document1.getHashString());
+			Result result2 = new Result(document1.getResult().getHashString());
+			document2.setResult(result2);
 			
 			// Create a new JWT object and decode document2
 			JWT jwt2 = new JWT(secret);

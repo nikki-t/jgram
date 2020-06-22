@@ -1,0 +1,26 @@
+
+---------------------------------[ TAMPER REPORT ]-----------------------------
+
+Filename: GRADED_tamper-valid.docx
+
+Tamper Status: 
+	PASSED all comparisons
+
+Grade Mapping: 
+A+ = 97
+A  = 95
+A- = 93
+B+ = 87
+B  = 85
+B- = 83
+C  = 77
+F  = 67
+
+
+Result Table: 
+  C#   Weight   Grade   Feedback
+   1        7      90   
+   2        5      97   great clarity
+   3        7      95   Use generics, but overall good work
+            Σ   93.68
+
