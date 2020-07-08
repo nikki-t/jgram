@@ -10,7 +10,8 @@ JGRAM provides four main operations:
 - Assigment reporting which provides three reports: 1) Student grading data for one assignment; 2) All available grading data for a student; 3) Assignment statistics for all previously graded assignments.
 
 ## Installation
-1. Clone the GitHub Repository to a directory on your local system: git clone https://github.com/nikki-t/jgram.git
+1. Clone the GitHub Repository to a directory on your local system: 
+```git clone https://github.com/nikki-t/jgram.git```
 2. Launch Eclipse
 3. Go to File > Import > Maven > Existing Maven Projects
 4. Select a root directory for the 'Root Directory: ' field by clicking 'Browse...' and navigating to the directory you cloned the GitHub Repository to in step 1. From within that directory navigate to the directory that contains the 'pom.xml' file (e.g. c:\Users\username\Desktop\workspace\jgram\jgram) and select 'Open'.
