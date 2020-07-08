@@ -10,11 +10,23 @@ JGRAM provides four main operations:
 - Assigment reporting which provides three reports: 1) Student grading data for one assignment; 2) All available grading data for a student; 3) Assignment statistics for all previously graded assignments.
 
 ## Installation
-In Eclipse:
-1. Clone Git Respository
-2. Create new Java project
-3. Convert project to a Maven project by right-clicking on the project in Project Explorer and clicking 'Configure' > 'Maven Project'
-4. Run pom.xml as a Maven build to install and compile dependencies
+1. Clone the GitHub Repository to a directory on your local system: git clone https://github.com/nikki-t/jgram.git
+2. Launch Eclipse
+3. Go to File > Import > Maven > Existing Maven Projects
+4. Select a root directory for the 'Root Directory: ' field by clicking 'Browse...' and navigating to the directory you cloned the GitHub Repository to in step 1. From within that directory navigate to the directory that contains the 'pom.xml' file (e.g. c:\Users\username\Desktop\workspace\jgram\jgram) and select 'Open'.
+5. The 'pom.xml' file should be checked and listed under 'Projects:' and you can now click 'Finish'
+6. Maven should now compile and build the JGRAM program. The JGRAM entry point is found in jgram.jgram.MainJGRAM.java
+
+If JGRAM will not compile and execute, you may need to change your Build Path. To do this:
+7. Right-click on the project folder 'jgram' and click 'Properties'
+8. Click 'Java Build Path' from the left column
+9. Click on the 'Libraries' tab
+10. Click 'JRE System Library [Java<Version>]' and then click 'Edit...' in the right column
+11. Under System Library, at the 'Execution environment' field drop-down select 'JavaSE-1.8[1.8.0_191]'
+12. Click 'Finish'
+13. Click 'Apply and Close'
+
+A further troubleshooting tip: If you still can't run JGRAM, try deleting the project and the cloned GitHub repository and starting at step 1 to clone the repo, import the Maven project and proceed to steps 7 - 13.
 
 ## Configuration
 
