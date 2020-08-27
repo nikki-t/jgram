@@ -87,12 +87,12 @@ public class Comment {
 		
 		// Post 2 Extraction
 		// Extract feedback
-		int feedbackStart = text.indexOf("FEEDBACK=[");
-		int feedbackEnd = text.indexOf("]");
-		String feedback = text.substring(feedbackStart + 10, feedbackEnd);
+		int feedbackStart = checkpointContent.indexOf("FEEDBACK=[");
+		int feedbackEnd = checkpointContent.indexOf("]");
+		String feedback = checkpointContent.substring(feedbackStart + 10, feedbackEnd);
 		
 		// Remove feedback from checkpoint content
-		checkpointContent = checkpointContent.substring(0, feedbackStart - 11);
+		checkpointContent = checkpointContent.substring(0, (feedbackStart - 2));
 		checkpointContent = checkpointContent.trim();
 			
 		try {
